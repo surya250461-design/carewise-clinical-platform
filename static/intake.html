@@ -916,10 +916,13 @@
     transform: translateY(-1px);
   }
   .btn-autofill.applied {
-    background: #10B981;
-    cursor: default;
-    box-shadow: none;
-    transform: none;
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(5, 150, 105, 0.3);
+  }
+  .btn-autofill.applied:hover {
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.4);
+    transform: translateY(-1px);
   }
 
   .btn-view-doc {
@@ -2022,6 +2025,558 @@ const I18N = {
 };
 
 // -------------------------------------------------------------
+// Multilingual Past Medical Records & Clinical Translations
+// -------------------------------------------------------------
+const I18N_RECORDS = {
+  en: {
+    pastRecordBadge: "🩺 Past Medical Record",
+    clickToViewHint: "Click to view record & lab results ▾",
+    clickToHideHint: "Click to hide details ▴",
+    labReportAttached: "Lab Report Attached",
+    labReportTitle: "🧪 RESPECTIVE LAB REPORT & INVESTIGATIONS",
+    prevConsultTitle: "📋 PREVIOUS CONSULTATION DETAILS",
+    complaintLabel: "Complaint:",
+    presentIllnessLabel: "Present Illness:",
+    pastHistoryLabel: "Past History:",
+    medicationsLabel: "Medications:",
+    prioritySuffix: "PRIORITY",
+    priorityEmergency: "EMERGENCY",
+    priorityUrgent: "URGENT",
+    priorityRoutine: "ROUTINE",
+    viewReportBtn: "📄 View Report",
+    autofillBtn: "📥 Auto-fill All to Active Consultation",
+    autofilledBtn: "✓ Added · Generate OPD Token",
+    generateTokenNow: "🎫 Generate OPD Token ID",
+    generateTokenDesc: "Your medical records have been loaded into your active chart. Click below to generate your hospital OPD token pass:",
+    chipGenerateToken: "🎫 Generate OPD Token ID",
+    chipAddSymptoms: "➕ Add More Symptoms",
+    importDoctorSuccess: "I have imported your prior medical record and attached lab reports into your active chart. You can generate your OPD Token ID right away or mention any new symptoms:",
+    importVoiceSuccess: "Imported prior medical record and attached lab reports into your chart. Click generate token to complete your registration."
+  },
+  hi: {
+    pastRecordBadge: "🩺 पिछला मेडिकल रिकॉर्ड",
+    clickToViewHint: "रिकॉर्ड और लैब जांच देखने के लिए क्लिक करें ▾",
+    clickToHideHint: "विवरण छिपाने के लिए क्लिक करें ▴",
+    labReportAttached: "लैब रिपोर्ट संलग्न",
+    labReportTitle: "🧪 संबंधित लैब रिपोर्ट और जांच",
+    prevConsultTitle: "📋 पिछले परामर्श का विवरण",
+    complaintLabel: "मुख्य समस्या:",
+    presentIllnessLabel: "वर्तमान बीमारी:",
+    pastHistoryLabel: "पिछला इतिहास:",
+    medicationsLabel: "दवाएं:",
+    prioritySuffix: "प्राथमिकता",
+    priorityEmergency: "आपातकालीन",
+    priorityUrgent: "अति-आवश्यक",
+    priorityRoutine: "सामान्य",
+    viewReportBtn: "📄 रिपोर्ट देखें",
+    autofillBtn: "📥 वर्तमान परामर्श में जोड़ें",
+    autofilledBtn: "✓ जुड़ गया · टोकन प्राप्त करें",
+    generateTokenNow: "🎫 ओपीडी टोकन आईडी बनाएं",
+    generateTokenDesc: "आपका पिछला मेडिकल रिकॉर्ड और लैब रिपोर्ट आपके चार्ट में जुड़ गया है। टोकन पास प्राप्त करने के लिए नीचे क्लिक करें:",
+    chipGenerateToken: "🎫 टोकन आईडी बनाएं",
+    chipAddSymptoms: "➕ अन्य लक्षण बताएं",
+    importDoctorSuccess: "मैंने आपका पिछला मेडिकल रिकॉर्ड और लैब रिपोर्ट आपके परामर्श चार्ट में जोड़ दी है। क्या आप अभी अपना ओपीडी टोकन बनाना चाहते हैं या अन्य लक्षण बताना चाहते हैं?",
+    importVoiceSuccess: "पिछला मेडिकल रिकॉर्ड और लैब रिपोर्ट चार्ट में जोड़ दी गई है। रजिस्ट्रेशन पूरा करने के लिए टोकन बनाएं पर क्लिक करें।"
+  },
+  ta: {
+    pastRecordBadge: "🩺 முந்தைய மருத்துவ பதிவு",
+    clickToViewHint: "பதிவு மற்றும் ஆய்வக முடிவுகளைப் பார்க்க கிளிக் செய்யவும் ▾",
+    clickToHideHint: "விவரங்களை மறைக்க கிளிக் செய்யவும் ▴",
+    labReportAttached: "ஆய்வக அறிக்கை இணைக்கப்பட்டுள்ளது",
+    labReportTitle: "🧪 தொடர்புடைய ஆய்வக அறிக்கை மற்றும் சோதனைகள்",
+    prevConsultTitle: "📋 முந்தைய மருத்துவ ஆலோசனை விவரங்கள்",
+    complaintLabel: "பிரச்சினை:",
+    presentIllnessLabel: "தற்போதைய நோய் நிலை:",
+    pastHistoryLabel: "முந்தைய வரலாறு:",
+    medicationsLabel: "மருந்துகள்:",
+    prioritySuffix: "முன்னுரிமை",
+    priorityEmergency: "அவசரம்",
+    priorityUrgent: "அதி-விரைவு",
+    priorityRoutine: "வழக்கமானது",
+    viewReportBtn: "📄 அறிக்கையைக் காண்க",
+    autofillBtn: "📥 தற்போதைய ஆலோசனைக்கு சேர்க்கவும்",
+    autofilledBtn: "✓ சேர்க்கப்பட்டது · டோக்கன் பெறவும்",
+    generateTokenNow: "🎫 ஓபிடி டோக்கன் ஐடி பெறவும்",
+    generateTokenDesc: "உங்கள் முந்தைய மருத்துவ வரலாறு மற்றும் ஆய்வக அறிக்கைகள் சேர்க்கப்பட்டன. டோக்கன் பாஸ் பெற கீழே கிளிக் செய்யவும்:",
+    chipGenerateToken: "🎫 டோக்கன் பெறவும்",
+    chipAddSymptoms: "➕ கூடுதல் அறிகுறிகளை சேர்க்க",
+    importDoctorSuccess: "உங்கள் முந்தைய மருத்துவ பதிவு மற்றும் ஆய்வக அறிக்கைகள் உங்கள் செயலில் உள்ள பதிவேட்டில் சேர்க்கப்பட்டுள்ளன. உடனே ஓபிடி டோக்கன் பெறலாம் அல்லது கூடுதல் அறிகுறிகளை தெரிவிக்கலாம்:",
+    importVoiceSuccess: "முந்தைய மருத்துவ பதிவு சேர்க்கப்பட்டது. பதிவை முடிக்க டோக்கன் உருவாக்கு என்பதை கிளிக் செய்யவும்."
+  },
+  te: {
+    pastRecordBadge: "🩺 మునుపటి మెడికల్ రికార్డు",
+    clickToViewHint: "రికార్డు & ల్యాబ్ ఫలితాలను చూడటానికి క్లిక్ చేయండి ▾",
+    clickToHideHint: "వివరాలను దాచడానికి క్లిక్ చేయండి ▴",
+    labReportAttached: "ల్యాబ్ నివేదిక జోడించబడింది",
+    labReportTitle: "🧪 సంబంధిత ల్యాబ్ నివేదిక & పరీక్షలు",
+    prevConsultTitle: "📋 మునుపటి సంప్రదింపు వివరాలు",
+    complaintLabel: "సమస్య:",
+    presentIllnessLabel: "ప్రస్తుత అనారోగ్యం:",
+    pastHistoryLabel: "గత చరిత్ర:",
+    medicationsLabel: "మందులు:",
+    prioritySuffix: "ప్రాధాన్యత",
+    priorityEmergency: "అత్యవసరం",
+    priorityUrgent: "త్వరిత",
+    priorityRoutine: "సాధారణ",
+    viewReportBtn: "📄 రిపోర్ట్ చూడండి",
+    autofillBtn: "📥 ప్రస్తుత సంప్రదింపులకు జోడించండి",
+    autofilledBtn: "✓ జోడించబడింది · టోకెన్ పొందండి",
+    generateTokenNow: "🎫 ఓపీడీ టోకెన్ ఐడీని రూపొందించండి",
+    generateTokenDesc: "మీ మునుపటి మెడికల్ రికార్డు మరియు ల్యాబ్ రిపోర్టులు మీ చార్ట్‌కు జోడించబడ్డాయి. టోకెన్ పాస్ కోసం క్రింద క్లిక్ చేయండి:",
+    chipGenerateToken: "🎫 టోకెన్ పొందండి",
+    chipAddSymptoms: "➕ మరిన్ని లక్షణాలు జోడించండి",
+    importDoctorSuccess: "నేను మీ మునుపటి మెడికల్ రికార్డు మరియు ల్యాబ్ ఫలితాలను మీ చార్ట్‌లోకి చేర్చాను. మీరు ఇప్పుడు ఓపీడీ టోకెన్ రూపొందించాలనుకుంటున్నారా?",
+    importVoiceSuccess: "మునుపటి మెడికల్ రికార్డు మరియు ల్యాబ్ రిపోర్టులు జోడించబడ్డాయి. టోకెన్ పొందడానికి క్లిక్ చేయండి."
+  },
+  bn: {
+    pastRecordBadge: "🩺 পূর্ববর্তী মেডিকেল রেকর্ড",
+    clickToViewHint: "রেকর্ড ও ল্যাব রিপোর্ট দেখতে ক্লিক করুন ▾",
+    clickToHideHint: "বিবরণ লুকাতে ক্লিক করুন ▴",
+    labReportAttached: "ল্যাব রিপোর্ট সংযুক্ত",
+    labReportTitle: "🧪 সম্পর্কিত ল্যাব রিপোর্ট ও পরীক্ষা",
+    prevConsultTitle: "📋 পূর্ববর্তী পরামর্শের বিবরণ",
+    complaintLabel: "সমস্যা:",
+    presentIllnessLabel: "বর্তমান অসুস্থতা:",
+    pastHistoryLabel: "পূর্ববর্তী ইতিহাস:",
+    medicationsLabel: "ওষুধসমূহ:",
+    prioritySuffix: "অগ্রাধিকার",
+    priorityEmergency: "জরুরী",
+    priorityUrgent: "অতি-জরুরী",
+    priorityRoutine: "সাধারণ",
+    viewReportBtn: "📄 রিপোর্ট দেখুন",
+    autofillBtn: "📥 বর্তমান পরামর্শে যোগ করুন",
+    autofilledBtn: "✓ যুক্ত হয়েছে · টোকেন পান",
+    generateTokenNow: "🎫 ওপিডি টোকেন আইডি তৈরি করুন",
+    generateTokenDesc: "আপনার পূর্ববর্তী রেকর্ড এবং ল্যাব রিপোর্ট সক্রিয় চার্টে যোগ করা হয়েছে। টোকেন পেতে নিচে ক্লিক করুন:",
+    chipGenerateToken: "🎫 টোকেন পান",
+    chipAddSymptoms: "➕ আরও লক্ষণ যোগ করুন",
+    importDoctorSuccess: "আমি আপনার পূর্ববর্তী মেডিকেল রেকর্ড এবং ল্যাব রিপোর্ট বর্তমান চার্টে যুক্ত করেছি। আপনি কি এখনই ওপিডি টোকেন তৈরি করতে চান?",
+    importVoiceSuccess: "পূর্ববর্তী মেডিকেল রেকর্ড চার্টে যুক্ত করা হয়েছে। রেজিস্ট্রেশন সম্পন্ন করতে টোকেন তৈরি করুন।"
+  },
+  mr: {
+    pastRecordBadge: "🩺 मागील वैद्यकीय रेकॉर्ड",
+    clickToViewHint: "तपशील व लॅब तपासणी पाहण्यासाठी क्लिक करा ▾",
+    clickToHideHint: "तपशील लपवण्यासाठी क्लिक करा ▴",
+    labReportAttached: "लॅब अहवाल जोडला आहे",
+    labReportTitle: "🧪 संबंधित लॅब अहवाल व तपासण्या",
+    prevConsultTitle: "📋 मागील तपासणीचे तपशील",
+    complaintLabel: "तक्रार:",
+    presentIllnessLabel: "सध्याचा आजार:",
+    pastHistoryLabel: "मागील इतिहास:",
+    medicationsLabel: "औषधे:",
+    prioritySuffix: "प्राधान्य",
+    priorityEmergency: "तात्काळ / आणीबाणी",
+    priorityUrgent: "तातडीचे",
+    priorityRoutine: "नियमित",
+    viewReportBtn: "📄 अहवाल पहा",
+    autofillBtn: "📥 चालू तपासणीत समाविष्ट करा",
+    autofilledBtn: "✓ जोडले गेले · टोकन मिळवा",
+    generateTokenNow: "🎫 ओपीडी टोकन आयडी तयार करा",
+    generateTokenDesc: "तुमचे मागील वैद्यकीय रेकॉर्ड आणि लॅब तपासणी अहवाल जोडले गेले आहेत. टोकनसाठी खाली क्लिक करा:",
+    chipGenerateToken: "🎫 टोकन मिळवा",
+    chipAddSymptoms: "➕ इतर लक्षणे सांगा",
+    importDoctorSuccess: "मी तुमचे मागील वैद्यकीय रेकॉर्ड आणि लॅब अहवाल चालू चार्टमध्ये जोडले आहेत. तुम्हाला आता ओपीडी टोकन मिळवायचे आहे का?",
+    importVoiceSuccess: "मागील वैद्यकीय रेकॉर्ड चार्टमध्ये जोडले गेले आहे. टोकन तयार करण्यासाठी क्लिक करा."
+  },
+  kn: {
+    pastRecordBadge: "🩺 ಹಿಂದಿನ ವೈದ್ಯಕೀಯ ದಾಖಲೆ",
+    clickToViewHint: "ದಾಖಲೆ ಮತ್ತು ಲ್ಯಾಬ್ ಫಲಿತಾಂಶಗಳನ್ನು ನೋಡಲು ಕ್ಲಿಕ್ ಮಾಡಿ ▾",
+    clickToHideHint: "ವಿವರಗಳನ್ನು ಮರೆಮಾಡಲು ಕ್ಲಿಕ್ ಮಾಡಿ ▴",
+    labReportAttached: "ಲ್ಯಾಬ್ ವರದಿ ಲಗತ್ತಿಸಲಾಗಿದೆ",
+    labReportTitle: "🧪 ಸಂಬಂಧಿತ ಲ್ಯಾಬ್ ವರದಿ ಮತ್ತು ತಪಾಸಣೆಗಳು",
+    prevConsultTitle: "📋 ಹಿಂದಿನ ಸಮಾಲೋಚನೆ ವಿವರಗಳು",
+    complaintLabel: "ಸಮಸ್ಯೆ:",
+    presentIllnessLabel: "ಪ್ರಸ್ತುತ ಅನಾರೋಗ್ಯ:",
+    pastHistoryLabel: "ಹಿಂದಿನ ಇತಿಹಾಸ:",
+    medicationsLabel: "ಔಷಧಿಗಳು:",
+    prioritySuffix: "ಆದ್ಯತೆ",
+    priorityEmergency: "ತುರ್ತು",
+    priorityUrgent: "ಅತೀ-ತುರ್ತು",
+    priorityRoutine: "ಸಾಮಾನ್ಯ",
+    viewReportBtn: "📄 ವರದಿ ವೀಕ್ಷಿಸಿ",
+    autofillBtn: "📥 ಸಕ್ರಿಯ ಸಮಾಲೋಚನೆಗೆ ಸೇರಿಸಿ",
+    autofilledBtn: "✓ ಸೇರಿಸಲಾಗಿದೆ · ಟೋಕನ್ ಪಡೆಯಿರಿ",
+    generateTokenNow: "🎫 ಒಪಿಡಿ ಟೋಕನ್ ಐಡಿ ರಚಿಸಿ",
+    generateTokenDesc: "ನಿಮ್ಮ ಹಿಂದಿನ ವೈದ್ಯಕೀಯ ಇತಿಹಾಸ ಮತ್ತು ಲ್ಯಾಬ್ ವರದಿಗಳನ್ನು ಸೇರಿಸಲಾಗಿದೆ. ಟೋಕನ್ ಪಾಸ್‌ಗಾಗಿ ಕೆಳಗೆ ಕ್ಲಿಕ್ ಮಾಡಿ:",
+    chipGenerateToken: "🎫 ಟೋಕನ್ ಪಡೆಯಿರಿ",
+    chipAddSymptoms: "➕ ಇನ್ನಷ್ಟು ಲಕ್ಷಣಗಳನ್ನು ಸೇರಿಸಿ",
+    importDoctorSuccess: "ನಾನು ನಿಮ್ಮ ಹಿಂದಿನ ವೈದ್ಯಕೀಯ ದಾಖಲೆ ಮತ್ತು ಲ್ಯಾಬ್ ವರದಿಗಳನ್ನು ನಿಮ್ಮ ಚಾರ್ಟ್‌ಗೆ ಸೇರಿಸಿದ್ದೇನೆ. ನೀವು ಈಗಲೇ ಒಪಿಡಿ ಟೋಕನ್ ರಚಿಸಲು ಬಯಸುವಿರಾ?",
+    importVoiceSuccess: "ಹಿಂದಿನ ವೈದ್ಯಕೀಯ ದಾಖಲೆಯನ್ನು ಸೇರಿಸಲಾಗಿದೆ. ಟೋಕನ್ ರಚಿಸಲು ಕ್ಲಿಕ್ ಮಾಡಿ."
+  },
+  ml: {
+    pastRecordBadge: "🩺 മുൻകാല മെഡിക്കൽ രേഖ",
+    clickToViewHint: "വിവരങ്ങളും ലാബ് ഫലങ്ങളും കാണാൻ ക്ലിക്ക് ചെയ്യുക ▾",
+    clickToHideHint: "വിവരങ്ങൾ മറയ്ക്കാൻ ക്ലിക്ക് ചെയ്യുക ▴",
+    labReportAttached: "ലാബ് റിപ്പോർട്ട് ചേർത്തു",
+    labReportTitle: "🧪 ലാബ് പരിശോധനാ ഫലങ്ങൾ",
+    prevConsultTitle: "📋 മുൻ കൺസൾട്ടേഷൻ വിവരങ്ങൾ",
+    complaintLabel: "പ്രശ്നം:",
+    presentIllnessLabel: "നിലവിലെ അസുഖം:",
+    pastHistoryLabel: "മുൻകാല ചരിത്രം:",
+    medicationsLabel: "മരുന്നുകൾ:",
+    prioritySuffix: "മുൻഗണന",
+    priorityEmergency: "അടിയന്തിരം",
+    priorityUrgent: "അത്യാവശ്യം",
+    priorityRoutine: "സാധാരണ",
+    viewReportBtn: "📄 റിപ്പോർട്ട് കാണുക",
+    autofillBtn: "📥 നിലവിലെ കൺസൾട്ടേഷനിലേക്ക് ചേർക്കുക",
+    autofilledBtn: "✓ ചേർത്തു · ടോക്കൺ എടുക്കുക",
+    generateTokenNow: "🎫 ഒപിഡി ടോക്കൺ ഐഡി നേടുക",
+    generateTokenDesc: "നിങ്ങളുടെ മുൻകാല വിവരങ്ങളും ലാബ് റിപ്പോർട്ടുകളും ചാർട്ടിലേക്ക് ചേർത്തു. ടോക്കൺ പാസ് ലഭിക്കാൻ താഴെ ക്ലിക്ക് ചെയ്യുക:",
+    chipGenerateToken: "🎫 ടോക്കൺ എടുക്കുക",
+    chipAddSymptoms: "➕ കൂടുതൽ ലക്ഷണങ്ങൾ ചേർക്കുക",
+    importDoctorSuccess: "നിങ്ങളുടെ മുൻകാല മെഡിക്കൽ രേഖകളും ലാബ് റിപ്പോർട്ടുകളും ഞാൻ ചാർട്ടിലേക്ക് ചേർത്തിട്ടുണ്ട്. നിങ്ങൾക്ക് ഇപ്പോൾ ഒപിഡി ടോക്കൺ സൃഷ്ടിക്കണോ അതോ കൂടുതൽ ലക്ഷണങ്ങൾ പറയണോ?",
+    importVoiceSuccess: "മുൻകാല മെഡിക്കൽ വിവരങ്ങൾ ചേർത്തു. ടോക്കൺ ലഭ്യമാക്കാൻ ക്ലിക്ക് ചെയ്യുക."
+  },
+  gu: {
+    pastRecordBadge: "🩺 અગાઉનો તબીબી રેકોર્ડ",
+    clickToViewHint: "રેકોર્ડ અને લેબ પરિણામો જોવા માટે ક્લિક કરો ▾",
+    clickToHideHint: "વિગતો છુપાવવા માટે ક્લિક કરો ▴",
+    labReportAttached: "લેબ રિપોર્ટ જોડાયેલ છે",
+    labReportTitle: "🧪 સંબંધિત લેબ રિપોર્ટ અને તપાસ",
+    prevConsultTitle: "📋 અગાઉના પરામર્શની વિગતો",
+    complaintLabel: "મુખ્ય સમસ્યા:",
+    presentIllnessLabel: "હાલની બીમારી:",
+    pastHistoryLabel: "અગાઉનો ઇતિહાસ:",
+    medicationsLabel: "દવાઓ:",
+    prioritySuffix: "પ્રાથમિકતા",
+    priorityEmergency: "ઇમરજન્સી / તાત્કાલિક",
+    priorityUrgent: "અતિ-જરૂરી",
+    priorityRoutine: "સામાન્ય",
+    viewReportBtn: "📄 રિપોર્ટ જુઓ",
+    autofillBtn: "📥 વર્તમાન પરામર્શમાં ઉમેરો",
+    autofilledBtn: "✓ ઉમેરાઈ ગયું · ટોકન મેળવો",
+    generateTokenNow: "🎫 ઓપીડી ટોકન આઈડી મેળવો",
+    generateTokenDesc: "તમારો અગાઉનો તબીબી ઇતિહાસ અને લેબ રિપોર્ટ્સ ચાર્ટમાં ઉમેરવામાં આવ્યા છે. ટોકન માટે નીચે ક્લિક કરો:",
+    chipGenerateToken: "🎫 ટોકન મેળવો",
+    chipAddSymptoms: "➕ વધુ લક્ષણો ઉમેરો",
+    importDoctorSuccess: "મેં તમારો અગાઉનો તબીબી રેકોર્ડ અને લેબ રિપોર્ટ્સ તમારા ચાર્ટમાં ઉમેર્યા છે. શું તમે અત્યારે ઓપીડી ટોકન મેળવવા માંગો છો કે અન્ય લક્ષણો જણાવવા માંગો છો?",
+    importVoiceSuccess: "અગાઉનો મેડિકલ રેકોર્ડ ચાર્ટમાં ઉમેરાયો છે. ટોકન જનરેટ કરવા માટે ક્લિક કરો."
+  }
+};
+
+const SUCCESS_I18N = {
+  en: {
+    title: "🎉 OPD Case Registered Successfully!",
+    subtitle: "Case successfully pushed to Hospital HIS, Live Triage Queue & ABHA Electronic Health Record.",
+    tokenLabel: "OPD QUEUE TOKEN NUMBER",
+    chamber: "Chamber 4 · Dr. S. Mehta (General Medicine & Clinical Triage)",
+    voice: id => `Your hospital OPD registration is complete! Your queue token number is OPD ${id}. Please proceed to Chamber 4.`
+  },
+  ta: {
+    title: "🎉 ஓபிடி பதிவு வெற்றிகரமாக முடிந்தது!",
+    subtitle: "விவரங்கள் மருத்துவமனை HIS அமைப்பு, நேரடி ட்ரையாஜ் வரிசை மற்றும் ABHA கணக்கில் பதிவேற்றப்பட்டது.",
+    tokenLabel: "ஓபிடி வரிசை டோக்கன் எண்",
+    chamber: "அறை 4 · மருத்துவர் எஸ். மேத்தா (பொது மருத்துவம் மற்றும் ட்ரையாஜ்)",
+    voice: id => `உங்கள் மருத்துவமனை ஓபிடி பதிவு வெற்றிகரமாக முடிந்தது! உங்கள் டோக்கன் எண் OPD ${id}. தயவுசெய்து அறை 4-க்கு செல்லவும்.`
+  },
+  hi: {
+    title: "🎉 ओपीडी केस सफलतापूर्वक दर्ज हो गया!",
+    subtitle: "केस को अस्पताल HIS, लाइव ट्राइएज कतार और ABHA हेल्थ रिकॉर्ड में भेज दिया गया है।",
+    tokenLabel: "ओपीडी कतार टोकन संख्या",
+    chamber: "कक्ष 4 · डॉ. एस. मेहता (जनरल मेडिसिन एवं क्लिनिकल ट्राइएज)",
+    voice: id => `आपका ओपीडी रजिस्ट्रेशन सफलतापूर्वक दर्ज हो गया है! आपका टोकन नंबर है OPD ${id}। कृपया ओपीडी कक्ष 4 में जाएं।`
+  },
+  te: {
+    title: "🎉 ఓపీడీ కేసు విజయవంతంగా నమోదైంది!",
+    subtitle: "కేసు ఆసుపత్రి HIS, లైవ్ ట్రయాజ్ క్యూ మరియు ABHA రికార్డుకు పంపబడింది.",
+    tokenLabel: "ఓపీడీ క్యూ టోకెన్ సంఖ్య",
+    chamber: "గది 4 · డాక్టర్ ఎస్. మెహతా (జనరల్ మెడిసిన్ & క్లినికల్ ట్రయాజ్)",
+    voice: id => `మీ ఆసుపత్రి ఓపీడీ నమోదు పూర్తయింది! మీ టోకెన్ నంబర్ OPD ${id}. దయచేసి ఛాంబర్ 4 కు వెళ్ళండి.`
+  },
+  bn: {
+    title: "🎉 ওপিডি কেস সফলভাবে নিবন্ধিত হয়েছে!",
+    subtitle: "কেসটি সফলভাবে হাসপাতালের HIS, লাইভ ট্রায়াজ কিউ এবং ABHA রেকর্ডে পাঠানো হয়েছে।",
+    tokenLabel: "ওপিডি কিউ টোকেন নম্বর",
+    chamber: "চেম্বার ৪ · ডাঃ এস. মেহতা (জেনারেল মেডিসিন ও ক্লিনিকাল ট্রায়াজ)",
+    voice: id => `আপনার হাসপাতালের ওপিডি রেজিস্ট্রেশন সম্পন্ন হয়েছে! আপনার টোকেন নম্বর হল OPD ${id}। অনুগ্রহ করে চেম্বার ৪-এ যান।`
+  },
+  mr: {
+    title: "🎉 ओपीडी केस यशस्वीरित्या नोंदणीकृत झाली!",
+    subtitle: "केस हॉस्पिटल HIS, थेट ट्रायज रांग आणि ABHA इलेक्ट्रॉनिक हेल्थ रेकॉर्डमध्ये पाठवली गेली आहे.",
+    tokenLabel: "ओपीडी रांग टोकन क्रमांक",
+    chamber: "कक्ष ४ · डॉ. एस. मेहता (जनरल मेडिसिन आणि क्लिनिकल ट्रायज)",
+    voice: id => `तुमची हॉस्पिटल ओपीडी नोंदणी पूर्ण झाली आहे! तुमचा टोकन क्रमांक OPD ${id} आहे. कृपया कक्ष ४ मध्ये जा.`
+  },
+  kn: {
+    title: "🎉 ಒಪಿಡಿ ಪ್ರಕರಣ ಯಶಸ್ವಿಯಾಗಿ ದಾಖಲಾಗಿದೆ!",
+    subtitle: "ಪ್ರಕರಣವನ್ನು ಆಸ್ಪತ್ರೆಯ HIS, ನೇರ ಟ್ರಯೇಜ್ ಕ್ಯೂ ಮತ್ತು ABHA ದಾಖಲೆಗೆ ಕಳುಹಿಸಲಾಗಿದೆ.",
+    tokenLabel: "ಒಪಿಡಿ ಕ್ಯೂ ಟೋಕನ್ ಸಂಖ್ಯೆ",
+    chamber: "ಕೊಠಡಿ 4 · ಡಾ. ಎಸ್. ಮೆಹ್ತಾ (ಜನರಲ್ ಮೆಡಿಸಿನ್ ಮತ್ತು ಕ್ಲಿನಿಕಲ್ ಟ್ರಯೇಜ್)",
+    voice: id => `ನಿಮ್ಮ ಆಸ್ಪತ್ರೆಯ ಒಪಿಡಿ ನೋಂದಣಿ ಪೂರ್ಣಗೊಂಡಿದೆ! ನಿಮ್ಮ ಟೋಕನ್ ಸಂಖ್ಯೆ OPD ${id}. ದಯವಿಟ್ಟು ಕೊಠಡಿ 4 ಕ್ಕೆ ಹೋಗಿ.`
+  },
+  ml: {
+    title: "🎉 ഒപിഡി കേസ് വിജയകരമായി രജിസ്റ്റർ ചെയ്തു!",
+    subtitle: "കേസ് ഹോസ്പിറ്റൽ HIS, ലൈവ് ട്രയേജ് ക്യൂ, ABHA റെക്കോർഡ് എന്നിവയിലേക്ക് കൈമാറി.",
+    tokenLabel: "ഒപിഡി ക്യൂ ടോക്കൺ നമ്പർ",
+    chamber: "മുറി 4 · ഡോ. എസ്. മേത്ത (ജനറൽ മെഡിസിൻ & ക്ലിനിക്കൽ ട്രയേജ്)",
+    voice: id => `നിങ്ങളുടെ ഹോസ്പിറ്റൽ ഒപിഡി രജിസ്ട്രേഷൻ പൂർത്തിയായി! നിങ്ങളുടെ ടോക്കൺ നമ്പർ OPD ${id} ആണ്. ദയവായി ചേമ്പർ 4-ലേക്ക് പോകുക.`
+  },
+  gu: {
+    title: "🎉 ઓપીડી કેસ સફળતાપૂર્વક નોંધાયો!",
+    subtitle: "કેસ હોસ્પિટલ HIS, લાઈવ ટ્રાયેજ કતાર અને ABHA હેલ્થ રેકોર્ડમાં મોકલી દેવાયો છે.",
+    tokenLabel: "ઓપીડી કતાર ટોકન નંબર",
+    chamber: "રૂમ ૪ · ડૉ. એસ. મહેતા (જનરલ મેડિસિન અને ક્લિનિકલ ટ્રાયેજ)",
+    voice: id => `તમારી હોસ્પિટલ ઓપીડી નોંધણી પૂર્ણ થઈ ગઈ છે! તમારો ટોકન નંબર OPD ${id} છે. કૃપા કરીને રૂમ ૪ માં જાઓ.`
+  }
+};
+
+const CLINICAL_TRANSLATIONS = {
+  "Acute severe crushing chest pain, radiating to left arm with diaphoresis": {
+    ta: "கடுமையான நெஞ்சு வலி, இடது கைக்கு பரவும் வலி மற்றும் அதிக வியர்வை",
+    hi: "अत्यधिक तीव्र सीने में दर्द, जो बाएं हाथ तक फैलता है और पसीना आता है",
+    te: "తీవ్రమైన గుండె నొప్పి, ఎడమ చేతికి వ్యాపించడం మరియు విపరీతమైన చెమట",
+    bn: "তীব্র বুকে ব্যথা, যা বাম বাহুতে ছড়িয়ে পড়ে এবং অতিরিক্ত ঘাম হয়",
+    mr: "छातीत तीव्र असह्य वेदना, डाव्या हाताकडे पसरणाऱ्या आणि खूप घाम येणे",
+    kn: "ತೀವ್ರವಾದ ಎದೆ ನೋವು, ಎಡಗೈಗೆ ಹರಡುವ ನೋವು ಮತ್ತು ಅಧಿಕ ಬೆವರು",
+    ml: "കഠിനമായ നെഞ്ചുവേദന, ഇടത് കൈയിലേക്ക് പടരുന്ന വേദനയും അമിത വിയർപ്പും",
+    gu: "છાતીમાં તીવ્ર અસહ્ય દુખાવો, ડાબા હાથ તરફ ફેલાતો અને ખૂબ પરસેવો થવો"
+  },
+  "Acute severe crushing chest pain, radiating to left arm, shortness of breath, and profuse cold sweating": {
+    ta: "கடுமையான நெஞ்சு வலி, இடது கைக்கு பரவும் வலி, மூச்சுத் திணறல் மற்றும் குளிர்ந்த வியர்வை",
+    hi: "सीने में अत्यधिक तीव्र दर्द, बाएं हाथ तक फैलता दर्द, सांस फूलना और ठंडा पसीना आना",
+    te: "తీవ్రమైన గుండె నొప్పి, ఎడమ చేతికి వ్యాపించే నొప్పి, శ్వాస తీసుకోవడంలో ఇబ్బంది మరియు చెమట",
+    bn: "তীব্র বুকে ব্যথা, বাম হাতে ছড়িয়ে পড়া ব্যথা, শ্বাসকষ্ট এবং অতিরিক্ত ঘাম",
+    mr: "छातीत तीव्र असह्य वेदना, डाव्या हाताकडे पसरणाऱ्या, श्वास घेण्यास त्रास आणि थंड घाम",
+    kn: "ತೀವ್ರವಾದ ಎದೆ ನೋವು, ಎಡಗೈಗೆ ಹರಡುವುದು, ಉಸಿರಾಟದ ತೊಂದರೆ ಮತ್ತು ತಣ್ಣನೆಯ ಬೆವರು",
+    ml: "കഠിനമായ നെഞ്ചുവേദന, ഇടത് കൈയിലേക്ക് പടരുന്നത്, ശ്വാസതടസ്സം, തണുത്ത വിയർപ്പ്",
+    gu: "છાતીમાં તીવ્ર દુખાવો, ડાબા હાથ તરફ ફેલાતો, શ્વાસ લેવામાં તકલીફ અને ઠંડો પરસેવો"
+  },
+  "Severe retrosternal chest pain radiating to left arm and jaw, accompanied by profuse sweating and shortness of breath for the past 2 hours": {
+    ta: "கடந்த 2 மணி நேரமாக இடது கை மற்றும் தாடைக்கு பரவும் தீவிர நெஞ்சு வலி, அதிக வியர்வை மற்றும் மூச்சுத் திணறல்",
+    hi: "पिछले 2 घंटे से सीने में तेज दर्द जो बाएं हाथ और जबड़े तक जा रहा है, अत्यधिक पसीना और सांस फूलना",
+    te: "గత 2 గంటలుగా ఎడమ చేయి మరియు దవడకు వ్యాపించే తీవ్రమైన ఛాతీ నొప్పి, చెమట మరియు శ్వాస ఆడకపోవడం",
+    bn: "গত ২ ঘণ্টা ধরে তীব্র বুকে ব্যথা যা বাম বাহু এবং চোয়ালে ছড়াচ্ছে, সাথে প্রচণ্ড ঘাম ও শ্বাসকষ্ট",
+    mr: "गेल्या २ तासांपासून डाव्या हाताकडे व जबड्याकडे पसरणाऱ्या छातीत तीव्र वेदना, खूप घाम आणि श्वास घेण्यास त्रास",
+    kn: "ಕಳೆದ 2 ಗಂಟೆಗಳಿಂದ ಎಡಗೈ ಮತ್ತು ದವಡೆಗೆ ಹರಡುವ ತೀವ್ರ ಎದೆ ನೋವು, ಅತಿಯಾದ ಬೆವರು ಮತ್ತು ಉಸಿರಾಟದ ತೊಂದರೆ",
+    ml: "കഴിഞ്ഞ 2 മണിക്കൂറായി ഇടത് കൈയിലേക്കും താടിയെല്ലിലേക്കും പടരുന്ന കഠിനമായ നെഞ്ചുവേദന, അമിതമായ വിയർപ്പും ശ്വാസതടസ്സവും",
+    gu: "છેલ્લા ૨ કલાકથી ડાબા હાથ અને જડબા તરફ ફેલાતો છાતીમાં તીવ્ર દુખાવો, ખૂબ પરસેવો અને શ્વાસ લેવામાં તકલીફ"
+  },
+  "Type 2 Diabetes Mellitus, Essential Hypertension, Dyslipidemia": {
+    ta: "வகை 2 நீரிழிவு நோய், உயர் இரத்த அழுத்தம், கொலஸ்ட்ரால் குறைபாடு",
+    hi: "टाइप 2 मधुमेह, उच्च रक्तचाप (हाइपरटेंशन), डिस्लिपिडेमिया (कोलेस्ट्रॉल)",
+    te: "టైప్ 2 మధుమేహం, అధిక రక్తపోటు, డిస్లిపిడెమియా (కొలెస్ట్రాల్)",
+    bn: "টাইপ ২ ডায়াবেটিস মেলিটাস, উচ্চ রক্তচাপ, ডিসলিপিডেমিয়া",
+    mr: "टाइप २ मधुमेह, उच्च रक्तदाब, डिस्लिपिडेमिया (कोलेस्टेरॉल)",
+    kn: "ಟೈಪ್ 2 ಮಧುಮೇಹ, ಅಧಿಕ ರಕ್ತದೊತ್ತಡ, ಡಿಸ್ಲಿಪಿಡೆಮಿಯಾ",
+    ml: "ടൈപ്പ് 2 പ്രമേഹം, അമിത രക്തസമ്മർദ്ദം, ഡിസ്‌ലിപിഡീമിയ",
+    gu: "ટાઈપ ૨ ડાયાબિટીસ, હાઈ બ્લડ પ્રેશર, ડિસ્લિપિડેમિયા"
+  },
+  "Type 2 Diabetes Mellitus": {
+    ta: "வகை 2 நீரிழிவு நோய்",
+    hi: "टाइप 2 मधुमेह",
+    te: "టైప్ 2 మధుమేహం",
+    bn: "টাইপ ২ ডায়াবেটিস",
+    mr: "टाइप २ मधुमेह",
+    kn: "ಟೈಪ್ 2 ಮಧುಮೇಹ",
+    ml: "ടൈപ്പ് 2 പ്രമേഹം",
+    gu: "ટાઈપ ૨ ડાયાબિટીસ"
+  },
+  "Essential Hypertension": {
+    ta: "உயர் இரத்த அழுத்தம்",
+    hi: "उच्च रक्तचाप",
+    te: "అధిక రక్తపోటు",
+    bn: "উচ্চ রক্তচাপ",
+    mr: "उच्च रक्तदाब",
+    kn: "ಅಧಿಕ ರಕ್ತದೊತ್ತಡ",
+    ml: "ഉയർന്ന രക്തസമ്മർദ്ദം",
+    gu: "હાઈ બ્લડ પ્રેશર"
+  },
+  "Dyslipidemia": {
+    ta: "கொலஸ்ட்ரால் ஏற்றத்தாழ்வு (டிஸ்லிபிடெமியா)",
+    hi: "डिस्लिपिडेमिया (असामान्य कोलेस्ट्रॉल)",
+    te: "డిస్లిపిడెమియా",
+    bn: "ডিসলিপিডেমিয়া",
+    mr: "डिस्लिपिडेमिया",
+    kn: "ಡಿಸ್ಲಿಪಿಡೆಮಿಯಾ",
+    ml: "ഡിസ്ലിപിഡീമിയ",
+    gu: "ડિસ્લિપિડેમિયા"
+  },
+  "Routine Clinical Consultation": {
+    ta: "வழக்கமான மருத்துவ ஆலோசனை",
+    hi: "नियमित चिकित्सीय परामर्श",
+    te: "సాధారణ క్లినికల్ సంప్రదింపులు",
+    bn: "নিয়মিত ক্লিনিকাল পরামর্শ",
+    mr: "नेहमीचा वैद्यकीय सल्ला",
+    kn: "ಸಾಮಾನ್ಯ ವೈದ್ಯಕೀಯ ಸಮಾಲೋಚನೆ",
+    ml: "സാധാരണ മെഡിക്കൽ കൺസൾട്ടേഷൻ",
+    gu: "સામાન્ય ક્લિનિકલ પરામર્શ"
+  },
+  "General Clinical Consultation": {
+    ta: "பொது மருத்துவ பரிசோதனை",
+    hi: "सामान्य चिकित्सीय परामर्श",
+    te: "సాధారణ క్లినికల్ సంప్రదింపులు",
+    bn: "সাধারণ ক্লিনিকাল পরামর্শ",
+    mr: "सर्वसाधारण वैद्यकीय सल्ला",
+    kn: "ಸಾಮಾನ್ಯ ವೈದ್ಯಕೀಯ ಸಮಾಲೋಚನೆ",
+    ml: "പൊതുവായ മെഡിക്കൽ കൺസൾട്ടേഷൻ",
+    gu: "સામાન્ય તબીબી પરામર્શ"
+  },
+  "Previous Visit": {
+    ta: "முந்தைய வருகை",
+    hi: "पिछली विज़िट",
+    te: "మునుపటి సందర్శన",
+    bn: "পূর্ববর্তী সাক্ষাৎ",
+    mr: "मागील भेट",
+    kn: "ಹಿಂದಿನ ಭೇಟಿ",
+    ml: "മുൻ സന്ദർശനം",
+    gu: "અગાઉની મુલાકાત"
+  },
+  "Diagnostic Record": {
+    ta: "பரிசோதனை பதிவு",
+    hi: "जांच रिकॉर्ड",
+    te: "రోగనిర్ధారణ రికార్డు",
+    bn: "ডায়াগনস্টিক রেকর্ড",
+    mr: "तपासणी नोंद",
+    kn: "ರೋಗನಿರ್ಣಯ ದಾಖಲೆ",
+    ml: "ഡയഗ്നോസ്റ്റിക് റെക്കോർഡ്",
+    gu: "નિદાન રેકોર્ડ"
+  },
+  "Diagnostic Investigation": {
+    ta: "மருத்துவ ஆய்வக பரிசோதனை",
+    hi: "नैदानिक जांच",
+    te: "రోగనిర్ధారణ పరీక్ష",
+    bn: "ডায়াগনস্টিক পরীক্ষা",
+    mr: "वैद्यकीय तपासणी",
+    kn: "ರೋಗನಿರ್ಣಯ ಪರೀಕ್ಷೆ",
+    ml: "ഡയഗ്നോസ്റ്റിക് പരിശോധന",
+    gu: "નિદાન તપાસ"
+  },
+  "None reported": {
+    ta: "எதுவுமில்லை",
+    hi: "कोई नहीं",
+    te: "ఏమీ నివేదించబడలేదు",
+    bn: "কিছু নেই",
+    mr: "काहीही नाही",
+    kn: "ಯಾವುದೂ ಇಲ್ಲ",
+    ml: "ഒന്നുമില്ല",
+    gu: "કંઈ નથી"
+  },
+  "No known drug allergies": {
+    ta: "மருந்து ஒவ்வாமை எதுவும் இல்லை",
+    hi: "कोई ज्ञात दवा एलर्जी नहीं",
+    te: "తెలిసిన మందుల అలర్జీలు లేవు",
+    bn: "ওষুধের কোনো অ্যালার্জি নেই",
+    mr: "औषधांची ज्ञात ॲलर्जी नाही",
+    kn: "ಯಾವುದೇ ಔಷಧಿ ಅಲರ್ಜಿ ಇಲ್ಲ",
+    ml: "മരുന്ന് അലർജികളില്ല",
+    gu: "કોઈ જાણીતી દવાની એલર્જી નથી"
+  },
+  "Tab Aspirin 75mg OD, Tab Atorvastatin 20mg HS, Tab Metformin 500mg BD, Tab Telmisartan 40mg OD": {
+    ta: "மாத்திரை ஆஸ்பிரின் 75mg OD, மாத்திரை அடோர்வாஸ்டாடின் 20mg HS, மாத்திரை மெட்ஃபோர்மின் 500mg BD, மாத்திரை டெல்மிசார்டன் 40mg OD",
+    hi: "टैबलेट एस्पिरिन 75mg OD, टैबलेट एटोरवास्टेटिन 20mg HS, टैबलेट मेटफॉर्मिन 500mg BD, टैबलेट टेलिमिसार्टन 40mg OD",
+    te: "టాబ్లెట్ ఆస్పిరిన్ 75mg OD, అటోర్వాస్టాటిన్ 20mg HS, మెట్‌ఫార్మిన్ 500mg BD, టెల్మిసార్టన్ 40mg OD",
+    bn: "ট্যাবলেট অ্যাসপিরিন 75mg OD, অ্যাটোরভাস্ট্যাটিন 20mg HS, মেটফর্মিন 500mg BD, টেলমিসারটান 40mg OD",
+    mr: "टॅब्लेट ॲस्पिरिन 75mg OD, ॲटोरव्हास्टॅटिन 20mg HS, मेटफॉर्मिन 500mg BD, टेल्मिसार्टन 40mg OD",
+    kn: "ಮಾತ್ರೆ ಆಸ್ಪಿರಿನ್ 75mg OD, ಅಟೋರ್ವಾಸ್ಟಾಟಿನ್ 20mg HS, ಮೆಟ್‌ಫಾರ್ಮಿನ್ 500mg BD, ಟೆಲ್ಮಿಸಾರ್ಟನ್ 40mg OD",
+    ml: "ടാബ്‌ലെറ്റ് ആസ്പിരിൻ 75mg OD, അറ്റോർവാസ്റ്റാറ്റിൻ 20mg HS, മെറ്റ്ഫോർമിൻ 500mg BD, ടെൽമിസാർട്ടൻ 40mg OD",
+    gu: "ટેબ્લેટ એસ્પિરિન 75mg OD, એટોર્વાસ્ટેટિન 20mg HS, મેટફોર્મિન 500mg BD, ટેલ્મિસાર્ટન 40mg OD"
+  },
+  "Tab Aspirin 75mg OD": {
+    ta: "மாத்திரை ஆஸ்பிரின் 75mg OD",
+    hi: "टैबलेट एस्पिरिन 75mg OD",
+    te: "టాబ్లెట్ ఆస్పిరిన్ 75mg OD",
+    bn: "ট্যাবলেট অ্যাসপিরিন 75mg OD",
+    mr: "टॅब्लेट ॲस्पिरिन 75mg OD",
+    kn: "ಮಾತ್ರೆ ಆಸ್ಪಿರಿನ್ 75mg OD",
+    ml: "ടാബ്‌ലെറ്റ് ആസ്പിരിൻ 75mg OD",
+    gu: "ટેબ્લેટ એસ્પિરિન 75mg OD"
+  },
+  "Tab Atorvastatin 20mg HS": {
+    ta: "மாத்திரை அடோர்வாஸ்டாடின் 20mg HS",
+    hi: "टैबलेट एटोरवास्टेटिन 20mg HS",
+    te: "అటోర్వాస్టాటిన్ 20mg HS",
+    bn: "অ্যাটোরভাস্ট্যাটিন 20mg HS",
+    mr: "ॲटोरव्हास्टॅटिन 20mg HS",
+    kn: "ಅಟೋರ್ವಾಸ್ಟಾಟಿನ್ 20mg HS",
+    ml: "അറ്റോർവാസ്റ്റാറ്റിൻ 20mg HS",
+    gu: "એટોર્વાસ્ટેટિન 20mg HS"
+  },
+  "Tab Metformin 500mg BD": {
+    ta: "மாத்திரை மெட்ஃபோர்மின் 500mg BD",
+    hi: "टैबलेट मेटफॉर्मिन 500mg BD",
+    te: "మెట్‌ఫార్మిన్ 500mg BD",
+    bn: "মেটফর্মিন 500mg BD",
+    mr: "मेटफॉर्मिन 500mg BD",
+    kn: "ಮೆಟ್‌ಫಾರ್ಮಿನ್ 500mg BD",
+    ml: "മെറ്റ്ഫോർമിൻ 500mg BD",
+    gu: "મેટફોર્મિન 500mg BD"
+  },
+  "Tab Telmisartan 40mg OD": {
+    ta: "மாத்திரை டெல்மிசார்டன் 40mg OD",
+    hi: "टैबलेट टेलिमिसार्टन 40mg OD",
+    te: "టెల్మిసార్టన్ 40mg OD",
+    bn: "টেলমিসারটান 40mg OD",
+    mr: "टेल्मिसार्टन 40mg OD",
+    kn: "ಟೆಲ್ಮಿಸಾರ್ಟನ್ 40mg OD",
+    ml: "ടെൽമിസാർട്ടൻ 40mg OD",
+    gu: "ટેલ્મિસાર્ટન 40mg OD"
+  },
+  "Cold, cough and runny nose": {
+    ta: "சளி, இருமல் மற்றும் மூக்கொழுகுதல்",
+    hi: "सर्दी, खांसी और बहती नाक",
+    te: "జలుబు, దగ్గు మరియు ముక్కు కారడం",
+    bn: "সর্দি, কাশি এবং নাক দিয়ে জল পড়া",
+    mr: "सर्दी, खोकला आणि वाहणारे नाक",
+    kn: "ನೆಗಡಿ, ಕೆಮ್ಮು ಮತ್ತು ಮೂಗು ಸೋರುವಿಕೆ",
+    ml: "ജലദോഷം, ചുമ, മൂക്കൊലിപ്പ്",
+    gu: "શરદી, ઉધરસ અને વહેતું નાક"
+  },
+  "Acute Myocardial Infarction": {
+    ta: "மாரடைப்பு (Acute MI)",
+    hi: "मायोकार्डियल इन्फार्कशन (हार्ट अटैक)",
+    te: "గుండెపోటు (Acute MI)",
+    bn: "হার্ট অ্যাটাক (Acute MI)",
+    mr: "मायोकार्डियल इन्फेक्शन (हार्ट अटॅक)",
+    kn: "ಹೃದಯಾಘಾತ (Acute MI)",
+    ml: "ഹൃദയാഘാതം (Acute MI)",
+    gu: "હાર્ટ એટેક (Acute MI)"
+  },
+  "Coronary Artery Disease": {
+    ta: "இதய தமனி நோய் (CAD)",
+    hi: "कोरोनरी आर्टरी डिजीज (CAD)",
+    te: "కొరోనరీ ఆర్టరీ వ్యాధి (CAD)",
+    bn: "করোনারি ধমনী রোগ (CAD)",
+    mr: "कोरोनरी आर्टरी आजार (CAD)",
+    kn: "ಕೊರೊನರಿ ಅಪಧಮನಿ ಕಾಯಿಲೆ (CAD)",
+    ml: "കൊറോണറി ധമനി രോഗം (CAD)",
+    gu: "કોરોનરી ધમની રોગ (CAD)"
+  }
+};
+
+function localizeClinicalText(text, lang) {
+  if (!text || !lang || lang === 'en') return text;
+  const t = (text + '').trim();
+  if (!t) return text;
+
+  // Exact match
+  if (CLINICAL_TRANSLATIONS[t] && CLINICAL_TRANSLATIONS[t][lang]) {
+    return CLINICAL_TRANSLATIONS[t][lang];
+  }
+
+  // Case-insensitive exact match
+  const lower = t.toLowerCase();
+  for (const [k, map] of Object.entries(CLINICAL_TRANSLATIONS)) {
+    if (k.toLowerCase() === lower && map[lang]) {
+      return map[lang];
+    }
+  }
+
+  // Composite substring replacement (e.g. diagnoses separated by commas or sentences)
+  let result = text + '';
+  let changed = false;
+  for (const [k, map] of Object.entries(CLINICAL_TRANSLATIONS)) {
+    if (map[lang] && result.includes(k)) {
+      result = result.split(k).join(map[lang]);
+      changed = true;
+    }
+  }
+
+  return changed ? result : text;
+}
+
+
+// -------------------------------------------------------------
 // Real-Time Floating Particle Engine (HTML5 Canvas 60 FPS)
 // -------------------------------------------------------------
 function initParticleCanvas() {
@@ -2274,6 +2829,10 @@ function appendDoctorMessage(text, chips = [], inlineCardHtml = "") {
       chip.className = 'chip';
       chip.innerHTML = `${c.icon || '👉'} ${c.label || c.text}`;
       chip.onclick = () => {
+        if (c.action === 'submit') {
+          submitCompleteKioskCase();
+          return;
+        }
         const userText = c.text || c.label;
         document.getElementById('chatInput').value = userText;
         sendUserMessage();
@@ -2341,7 +2900,13 @@ function removeTypingIndicator() {
 async function sendUserMessage() {
   const inputEl = document.getElementById('chatInput');
   const message = inputEl.value.trim();
-  if (!message) return;
+  if (!message) {
+    if (consultationState.chief_complaint || consultationState.past_history || (conversationHistory && conversationHistory.length > 0)) {
+      submitCompleteKioskCase();
+      return;
+    }
+    return;
+  }
 
   hideValidationToast();
   stopAllAudioAndMic();
@@ -2719,6 +3284,8 @@ async function submitCompleteKioskCase() {
       if (emBanner) emBanner.style.display = 'none';
 
       // Populate token & registration details
+      const succ = SUCCESS_I18N[currentLanguage] || SUCCESS_I18N['en'];
+      const recI18n = I18N_RECORDS[currentLanguage] || I18N_RECORDS['en'];
       const triageUrgency = (data.triage_level || consultationState.triage_level || 'routine').toUpperCase();
       document.getElementById('successTokenNo').textContent = `#OPD-${patientId}`;
       document.getElementById('successPatientName').textContent = patientName || 'Walk-in Patient';
@@ -2729,17 +3296,32 @@ async function submitCompleteKioskCase() {
       document.getElementById('successAbhaAddress').textContent = `${cleanName}@abdm`;
 
       const badge = document.getElementById('successTriageBadge');
-      badge.textContent = `${triageUrgency} PRIORITY`;
+      let locPriority = triageUrgency;
+      if (triageUrgency === 'EMERGENCY') locPriority = recI18n.priorityEmergency || 'EMERGENCY';
+      else if (triageUrgency === 'URGENT') locPriority = recI18n.priorityUrgent || 'URGENT';
+      else if (triageUrgency === 'ROUTINE') locPriority = recI18n.priorityRoutine || 'ROUTINE';
+      badge.textContent = `${locPriority} ${recI18n.prioritySuffix || 'PRIORITY'}`;
       badge.className = `triage-badge-large ${triageUrgency.toLowerCase()}`;
 
-      document.getElementById('successComplaint').textContent = consultationState.chief_complaint || "Routine Clinical Consultation";
+      const rawComplaint = consultationState.chief_complaint || "Routine Clinical Consultation";
+      document.getElementById('successComplaint').textContent = localizeClinicalText(rawComplaint, currentLanguage);
       document.getElementById('successTimestamp').textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      // Update success card labels in the UI
+      const successTitleEl = document.querySelector('.success-title');
+      if (successTitleEl && succ.title) successTitleEl.textContent = succ.title;
+      const successSubEl = document.querySelector('.success-subtitle');
+      if (successSubEl && succ.subtitle) successSubEl.textContent = succ.subtitle;
+      const chamberEl = document.getElementById('successChamber');
+      if (chamberEl && succ.chamber) chamberEl.textContent = succ.chamber;
+      const tokenLabelEl = document.querySelector('.token-label');
+      if (tokenLabelEl && succ.tokenLabel) tokenLabelEl.textContent = succ.tokenLabel;
 
       // Reveal the full-area registration success view occupying the entire chat section
       document.getElementById('registrationSuccessView').style.display = 'flex';
 
-      const successVoice = (currentLanguage === 'hi')
-        ? `आपका ओपीडी रजिस्ट्रेशन सफलतापूर्वक दर्ज हो गया है! आपका टोकन नंबर है OPD ${patientId}। कृपया ओपीडी कक्ष 4 में जाएं।`
+      const successVoice = (succ.voice)
+        ? succ.voice(patientId)
         : `Your hospital OPD registration is complete! Your queue token number is OPD ${patientId}. Please proceed to Chamber 4.`;
       speakText(successVoice);
 
@@ -2969,23 +3551,27 @@ function renderPriorRecordsList(data) {
   encounters.forEach((enc, idx) => {
     const hasDocs = enc.documents && enc.documents.length > 0;
     const triageBadge = enc.triage_level || 'routine';
+    const recI18n = I18N_RECORDS[currentLanguage] || I18N_RECORDS['en'];
     const dateStr = enc.date || 'Previous Visit';
     const complaint = enc.chief_complaint || 'General Clinical Consultation';
+    const locComplaint = localizeClinicalText(complaint, currentLanguage);
+    const locDate = localizeClinicalText(dateStr, currentLanguage);
+    const isApplied = enc._applied === true;
 
     let attachedDocsHtml = '';
     if (hasDocs) {
       attachedDocsHtml = `
         <div class="encounter-section-box lab-box">
-          <div class="encounter-section-label" style="color:#0369A1;">🧪 RESPECTIVE LAB REPORT &amp; INVESTIGATIONS</div>
+          <div class="encounter-section-label" style="color:#0369A1;">${recI18n.labReportTitle}</div>
           ${enc.documents.map((doc, docIdx) => `
             <div class="attached-lab-item">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                 <span class="attached-lab-filename">📄 ${doc.source_filename}</span>
-                ${doc.stored_filename ? `<a href="/uploads/${doc.stored_filename}" target="_blank" class="btn-view-doc" onclick="event.stopPropagation();">📄 View Report</a>` : ''}
+                ${doc.stored_filename ? `<a href="/uploads/${doc.stored_filename}" target="_blank" class="btn-view-doc" onclick="event.stopPropagation();">${recI18n.viewReportBtn}</a>` : ''}
               </div>
               <div class="tag-pill-container">
-                ${(doc.diagnoses || []).map(d => `<span class="tag-pill diagnosis" title="Diagnosis">🩺 ${d}</span>`).join('')}
-                ${(doc.medications || []).map(m => `<span class="tag-pill medication" title="Medication">💊 ${typeof m === 'string' ? m : m.name}</span>`).join('')}
+                ${(doc.diagnoses || []).map(d => `<span class="tag-pill diagnosis" title="Diagnosis">🩺 ${localizeClinicalText(d, currentLanguage)}</span>`).join('')}
+                ${(doc.medications || []).map(m => `<span class="tag-pill medication" title="Medication">💊 ${localizeClinicalText(typeof m === 'string' ? m : m.name, currentLanguage)}</span>`).join('')}
                 ${(doc.investigations || []).map(inv => `<span class="tag-pill investigation" title="Lab Value">🔬 ${typeof inv === 'string' ? inv : `${inv.test}: ${inv.value}`}</span>`).join('')}
               </div>
             </div>
@@ -2994,33 +3580,38 @@ function renderPriorRecordsList(data) {
       `;
     }
 
+    let localizedPriority = triageBadge.toUpperCase();
+    if (triageBadge.toLowerCase() === 'emergency') localizedPriority = recI18n.priorityEmergency;
+    else if (triageBadge.toLowerCase() === 'urgent') localizedPriority = recI18n.priorityUrgent;
+    else if (triageBadge.toLowerCase() === 'routine') localizedPriority = recI18n.priorityRoutine;
+
     html += `
       <div class="encounter-record-card" id="encounterCard_${idx}">
         <div class="encounter-header" onclick="toggleEncounter(${idx})" title="Click to view details and attached lab records">
           <div class="encounter-header-top">
-            <span class="record-type-badge consultation">🩺 Past Medical Record</span>
-            <span class="record-date">${dateStr}</span>
+            <span class="record-type-badge consultation">${recI18n.pastRecordBadge}</span>
+            <span class="record-date">${locDate}</span>
             <span class="encounter-chevron" id="encounterChevron_${idx}">▼</span>
           </div>
           <div class="encounter-complaint-title">
-            "${complaint}"
+            "${locComplaint}"
           </div>
           <div class="encounter-meta-row">
-            ${hasDocs ? `<span class="encounter-badge-lab">🧪 ${enc.documents.length} Lab Report Attached</span>` : ''}
-            <span class="encounter-expand-hint" id="encounterHint_${idx}">Click to view record &amp; lab results ▾</span>
+            ${hasDocs ? `<span class="encounter-badge-lab">🧪 ${enc.documents.length} ${recI18n.labReportAttached}</span>` : ''}
+            <span class="encounter-expand-hint" id="encounterHint_${idx}">${recI18n.clickToViewHint}</span>
           </div>
         </div>
 
         <div class="encounter-content" id="encounterContent_${idx}" style="display:none;">
           <!-- 1. Previous Consultation Clinical Findings -->
           <div class="encounter-section-box">
-            <div class="encounter-section-label">📋 PREVIOUS CONSULTATION DETAILS</div>
-            <div class="encounter-text-item"><strong>Complaint:</strong> ${complaint}</div>
-            ${enc.present_illness ? `<div class="encounter-text-item"><strong>Present Illness:</strong> ${enc.present_illness}</div>` : ''}
-            ${enc.past_history && enc.past_history !== 'None reported' ? `<div class="encounter-text-item"><strong>Past History:</strong> ${enc.past_history}</div>` : ''}
-            ${enc.medications && enc.medications !== 'None reported' ? `<div class="encounter-text-item"><strong>Medications:</strong> ${enc.medications}</div>` : ''}
+            <div class="encounter-section-label">${recI18n.prevConsultTitle}</div>
+            <div class="encounter-text-item"><strong>${recI18n.complaintLabel}</strong> ${locComplaint}</div>
+            ${enc.present_illness ? `<div class="encounter-text-item"><strong>${recI18n.presentIllnessLabel}</strong> ${localizeClinicalText(enc.present_illness, currentLanguage)}</div>` : ''}
+            ${enc.past_history && enc.past_history !== 'None reported' ? `<div class="encounter-text-item"><strong>${recI18n.pastHistoryLabel}</strong> ${localizeClinicalText(enc.past_history, currentLanguage)}</div>` : ''}
+            ${enc.medications && enc.medications !== 'None reported' ? `<div class="encounter-text-item"><strong>${recI18n.medicationsLabel}</strong> ${localizeClinicalText(enc.medications, currentLanguage)}</div>` : ''}
             <div style="margin-top:6px;">
-              <span class="triage-badge ${triageBadge.toLowerCase()}">${triageBadge.toUpperCase()} PRIORITY</span>
+              <span class="triage-badge ${triageBadge.toLowerCase()}">${localizedPriority} ${recI18n.prioritySuffix}</span>
             </div>
           </div>
 
@@ -3028,8 +3619,8 @@ function renderPriorRecordsList(data) {
           ${attachedDocsHtml}
 
           <!-- 3. One-Click Auto-Fill Button -->
-          <button class="btn-autofill" id="autofillEncounterBtn_${idx}" onclick="autofillEncounterRecord(${idx})">
-            <span>📥 ${(I18N[currentLanguage] && I18N[currentLanguage].btnAutoFill) || 'Auto-fill All to Active Consultation'}</span>
+          <button class="btn-autofill ${isApplied ? 'applied' : ''}" id="autofillEncounterBtn_${idx}" onclick="${isApplied ? 'submitCompleteKioskCase()' : `autofillEncounterRecord(${idx})`}">
+            <span>${isApplied ? recI18n.autofilledBtn : recI18n.autofillBtn}</span>
           </button>
         </div>
       </div>
@@ -3045,15 +3636,16 @@ function toggleEncounter(index) {
   const hint = document.getElementById(`encounterHint_${index}`);
   if (!card || !content) return;
 
+  const recI18n = I18N_RECORDS[currentLanguage] || I18N_RECORDS['en'];
   const isExpanded = card.classList.contains('expanded');
   if (isExpanded) {
     card.classList.remove('expanded');
     content.style.display = 'none';
-    if (hint) hint.textContent = 'Click to view record & lab results ▾';
+    if (hint) hint.textContent = recI18n.clickToViewHint;
   } else {
     card.classList.add('expanded');
     content.style.display = 'flex';
-    if (hint) hint.textContent = 'Click to hide details ▴';
+    if (hint) hint.textContent = recI18n.clickToHideHint;
   }
 }
 
@@ -3061,7 +3653,13 @@ function autofillEncounterRecord(index) {
   const enc = (patientPriorRecordsCache.encounters || [])[index];
   if (!enc) return;
 
+  enc._applied = true;
   let addedItems = [];
+
+  // Ensure chief complaint is set if not already set
+  if (!consultationState.chief_complaint && enc.chief_complaint) {
+    consultationState.chief_complaint = enc.chief_complaint;
+  }
 
   // 1. Complaint & History
   if (enc.chief_complaint && enc.chief_complaint !== 'Routine Clinical Consultation') {
@@ -3110,6 +3708,12 @@ function autofillEncounterRecord(index) {
     }
   });
 
+  // Set consultation completeness and triage level
+  consultationState.completeness_percent = Math.max(consultationState.completeness_percent || 0, 85);
+  if (enc.triage_level) {
+    consultationState.triage_level = enc.triage_level;
+  }
+
   // Update telemetry bar
   const telMeds = document.getElementById('telMeds');
   if (telMeds && consultationState.medications) {
@@ -3121,18 +3725,42 @@ function autofillEncounterRecord(index) {
     telOnset.textContent = 'Chronic / Past Medical Encounter';
   }
 
-  // Mark button as applied
+  const recI18n = I18N_RECORDS[currentLanguage] || I18N_RECORDS['en'];
+
+  // Mark button as applied and make it generate OPD token on click
   const btn = document.getElementById(`autofillEncounterBtn_${index}`);
   if (btn) {
-    btn.innerHTML = `<span>✓ Added to Active Consultation</span>`;
+    btn.innerHTML = `<span>${recI18n.autofilledBtn}</span>`;
     btn.classList.add('applied');
-    btn.disabled = true;
+    btn.disabled = false;
+    btn.onclick = () => submitCompleteKioskCase();
   }
 
-  // Doctor chat confirmation
-  const summaryMsg = `I have imported your prior medical record (${enc.date} - ${enc.chief_complaint}) along with respective lab reports into your active chart: ${addedItems.join(' | ')}.`;
-  appendDoctorMessage(summaryMsg);
-  speakText(`Imported prior visit and attached lab reports into your active consultation chart.`);
+  // Action card inside the chat bubble
+  const actionCardHtml = `
+    <div style="background:linear-gradient(135deg, rgba(13,148,136,0.12), rgba(2,132,199,0.12)); border:1.5px solid var(--primary-border); border-radius:14px; padding:14px 16px; margin-top:8px;">
+      <div style="font-weight:700; color:var(--primary-dark); font-size:14px; margin-bottom:6px; display:flex; align-items:center; gap:8px;">
+        <span>📋</span> <span>${recI18n.generateTokenNow}</span>
+      </div>
+      <p style="font-size:12.5px; color:var(--ink-light); margin:0 0 12px 0; line-height:1.4;">
+        ${recI18n.generateTokenDesc}
+      </p>
+      <button onclick="submitCompleteKioskCase()" style="background:linear-gradient(135deg, #0D9488, #0F766E); color:#ffffff; border:none; border-radius:10px; padding:10px 18px; font-size:13.5px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:8px; box-shadow:0 4px 12px rgba(13,148,136,0.3); transition:all 0.2s;">
+        <span>🎫</span> <span>${recI18n.generateTokenNow}</span>
+      </button>
+    </div>
+  `;
+
+  const chips = [
+    { icon: "🎫", label: recI18n.chipGenerateToken, action: "submit" },
+    { icon: "➕", label: recI18n.chipAddSymptoms, text: (currentLanguage === 'ta' ? "கூடுதல் அறிகுறிகள்:" : (currentLanguage === 'hi' ? "अन्य लक्षण:" : "Additional symptoms:")) }
+  ];
+
+  const locComplaint = localizeClinicalText(enc.chief_complaint || 'Routine Clinical Consultation', currentLanguage);
+  const summaryMsg = `${recI18n.importDoctorSuccess} (${enc.date} - ${locComplaint})`;
+
+  appendDoctorMessage(summaryMsg, chips, actionCardHtml);
+  speakText(recI18n.importVoiceSuccess);
 }
 
 function triggerPriorDocUpload() {
