@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Starbucks — Admin &amp; DPDP Compliance Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F8FAFC;
+    --surface: #FFFFFF;
+    --surface-alt: #F1F5F9;
+    --ink: #0F172A;
+    --ink-light: #334155;
+    --muted: #64748B;
+    --line: #E2E8F0;
+    --primary: #0F766E;
+    --primary-light: #14B8A6;
+    --primary-soft: rgba(15, 118, 110, 0.08);
+    --accent: #0284C7;
+    --accent-soft: rgba(2, 132, 199, 0.08);
+    --danger: #DC2626;
+    --danger-soft: rgba(220, 38, 38, 0.08);
+    --warning: #D97706;
+    --warning-soft: rgba(217, 119, 6, 0.1);
+    --success: #16A34A;
+    --success-soft: rgba(22, 163, 74, 0.1);
+    --abha-blue: #1E40AF;
+    --abha-soft: rgba(30, 64, 175, 0.08);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+    --shadow: 0 4px 6px -1px rgba(0,0,0,0.07);
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  button, input, select { font-family: inherit; }
+  :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    padding: 14px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-logo {
+    width: 38px; height: 38px; border-radius: 10px;
+    background: linear-gradient(135deg, #0F766E, #14B8A6);
+    color: white; font-size: 18px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 8px rgba(15,118,110,0.25);
+  }
+  .brand-name { font-size: 17px; font-weight: 800; margin: 0; color: var(--ink); letter-spacing: -0.3px; }
+  .brand-sub { color: var(--muted); font-size: 11px; margin: 0; font-weight: 500; }
+
+  .topbar-actions { display: flex; gap: 12px; align-items: center; }
+  .link-btn {
+    font-size: 12.5px; color: var(--primary); text-decoration: none; font-weight: 700;
+    border: 1px solid var(--primary); padding: 7px 14px; border-radius: 8px;
+    transition: all 0.15s ease;
+  }
+  .link-btn:hover { background: var(--primary-soft); }
+  .logout-btn {
+    font-size: 12.5px; color: var(--muted); background: none; border: none; cursor: pointer; font-weight: 600;
+  }
+  .logout-btn:hover { color: var(--danger); }
+
+  .shell { max-width: 1100px; margin: 0 auto; padding: 32px 24px 80px; }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+  }
+  .stat-number {
+    font-size: 30px;
+    font-weight: 800;
+    color: var(--primary);
+    line-height: 1.1;
+  }
+  .stat-label { font-size: 12px; color: var(--muted); margin-top: 6px; font-weight: 600; }
+
+  .section-block {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 28px;
+    box-shadow: var(--shadow-sm);
+  }
+  .section-head-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .section-block h3 {
+    font-size: 16px;
+    font-weight: 800;
+    margin: 0;
+    color: var(--ink);
+  }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    text-align: left; color: var(--muted); font-weight: 700;
+    padding: 10px 12px; border-bottom: 1px solid var(--line); font-size: 11.5px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    background: var(--surface-alt);
+  }
+  td { padding: 11px 12px; border-bottom: 1px solid var(--line); }
+  tr:last-child td { border-bottom: none; }
+
+  .role-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--primary-soft);
+    color: var(--primary);
+  }
+  .role-badge.admin { background: var(--warning-soft); color: var(--warning); }
+  .role-badge.patient { background: var(--accent-soft); color: var(--accent); }
+
+  .action-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: var(--surface-alt);
+    color: var(--ink-light);
+  }
+  .action-tag.dpdp { background: var(--success-soft); color: var(--success); }
+  .action-tag.abha { background: var(--abha-soft); color: var(--abha-blue); }
+  .action-tag.purge { background: var(--danger-soft); color: var(--danger); }
+
+  .form-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 10px; }
+  .form-field { flex: 1; min-width: 140px; }
+  .form-field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; font-weight: 700; }
+  .form-field input, .form-field select {
+    width: 100%; padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px;
+    font-size: 13px; background: var(--bg); color: var(--ink);
+  }
+  .btn-primary-sm {
+    padding: 9px 18px; border-radius: 8px; border: none;
+    background: var(--primary); color: white; font-size: 13px; font-weight: 700; cursor: pointer; height: fit-content;
+    transition: background 0.15s ease;
+  }
+  .btn-primary-sm:hover { background: #0D635D; }
+  .btn-danger-sm {
+    padding: 9px 18px; border-radius: 8px; border: 1px solid var(--danger);
+    background: var(--surface); color: var(--danger); font-size: 13px; font-weight: 700; cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .btn-danger-sm:hover { background: var(--danger-soft); }
+
+  .status-msg { font-size: 12.5px; color: var(--muted); margin-top: 8px; min-height: 16px; font-weight: 600; }
+  .status-msg.error { color: var(--danger); }
+  .status-msg.success { color: var(--success); }
+
+  .gated { display: none; text-align: center; padding: 100px 20px; color: var(--muted); }
+
+  .audit-scroll {
+    max-height: 420px;
+    overflow-y: auto;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+  }
+</style>
+</head>
+<body>
+
+<div id="gatedScreen" class="gated">
+  <p>Verifying administrator privileges…</p>
+</div>
+
+<div id="adminContent" style="display:none;">
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-logo">SB</div>
+      <div>
+        <h1 class="brand-name">Starbucks Admin Console</h1>
+        <p class="brand-sub">DPDP Act 2023 Compliance &amp; Hospital Integration Hub</p>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <a href="/" class="link-btn">Physician Workstation ↗</a>
+      <a href="/intake" target="_blank" class="link-btn" style="border-color:var(--accent); color:var(--accent);">Kiosk Walk-In ↗</a>
+      <button class="logout-btn" onclick="logout()">Log out</button>
+    </div>
+  </div>
+
+  <div class="shell">
+    <!-- Platform Metrics -->
+    <div class="stats-grid" id="statsGrid"></div>
+
+    <!-- DPDP Act 2023 & ABDM Audit Trail -->
+    <div class="section-block">
+      <div class="section-head-row">
+        <div>
+          <h3>🛡 DPDP Act 2023 &amp; ABDM Compliance Audit Trail</h3>
+          <p style="margin:4px 0 0; font-size:12px; color:var(--muted);">
+            Verifiable, tamper-evident log of consent grants, ABHA authentications, OCR extractions, and kiosk session purges.
+          </p>
+        </div>
+        <button class="btn-primary-sm" onclick="loadAuditLogs()" style="background:var(--surface); border:1px solid var(--line); color:var(--ink);">
+          ↻ Refresh Logs
+        </button>
+      </div>
+
+      <div class="audit-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:160px;">Timestamp</th>
+              <th>Action / Event</th>
+              <th>Patient ID</th>
+              <th>ABHA ID</th>
+              <th>Compliance Details</th>
+            </tr>
+          </thead>
+          <tbody id="auditLogsTable">
+            <tr><td colspan="5" style="text-align:center; color:var(--muted);">Loading audit records…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Staff Account Provisioning -->
+    <div class="section-block">
+      <h3>Create Hospital Staff Account</h3>
+      <p style="font-size:12px; color:var(--muted); margin-top:2px; margin-bottom:14px;">
+        Provision role-based access for attending physicians and OPD triage administrators.
+      </p>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Full Name</label>
+          <input type="text" id="newFullName" placeholder="e.g. Dr. Ananya Sen" />
+        </div>
+        <div class="form-field">
+          <label>Username</label>
+          <input type="text" id="newUsername" placeholder="e.g. dr_ananya" />
+        </div>
+        <div class="form-field">
+          <label>Password</label>
+          <input type="password" id="newPassword" placeholder="••••••••" />
+        </div>
+        <div class="form-field" style="max-width:130px;">
+          <label>Role</label>
+          <select id="newRole">
+            <option value="doctor">Doctor</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <button class="btn-primary-sm" onclick="createStaff()">Create Account</button>
+      </div>
+      <div class="status-msg" id="createStatus"></div>
+    </div>
+
+    <!-- All User Accounts -->
+    <div class="section-block">
+      <h3>Registered System Accounts</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Role</th>
+            <th>Full Name</th>
+            <th>Patient / Staff ID</th>
+            <th>ABHA ID</th>
+            <th>Created</th>
+          </tr>
+        </thead>
+        <tbody id="usersTable"></tbody>
+      </table>
+    </div>
+
+    <!-- Kiosk System Maintenance -->
+    <div class="section-block">
+      <h3 style="color:var(--danger);">Kiosk Maintenance &amp; Demonstration Reset</h3>
+      <p style="font-size:13px; color:var(--muted); margin:4px 0 16px;">
+        Wipes active patient records, intake submissions, AI summaries, and OPD queues for fresh demonstrations.
+        Staff and administrator credentials are preserved.
+      </p>
+      <button class="btn-danger-sm" onclick="resetData()">Reset All Patient Data</button>
+      <div class="status-msg" id="resetStatus"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+async function checkAuth() {
+  try {
+    const res = await fetch('/auth/me');
+    if (!res.ok) { window.location.href = '/login'; return; }
+    const user = await res.json();
+    if (user.role !== 'admin') {
+      window.location.href = user.role === 'doctor' ? '/' : '/intake';
+      return;
+    }
+    document.getElementById('gatedScreen').style.display = 'none';
+    document.getElementById('adminContent').style.display = 'block';
+    await Promise.all([
+      loadStats(),
+      loadUsers(),
+      loadAuditLogs()
+    ]);
+  } catch (err) {
+    window.location.href = '/login';
+  }
+}
+
+async function loadStats() {
+  const res = await fetch('/admin/stats');
+  const stats = await res.json();
+  const grid = document.getElementById('statsGrid');
+  const labels = {
+    total_patients: 'Patients Enrolled',
+    total_records: 'Documents Digitized',
+    total_red_flags: 'Red-Flag Alerts',
+    emergency_triage_count: 'Emergency Triage',
+    total_abha_linked: 'ABHA IDs Linked',
+    total_audit_events: 'Audit Logs Logged',
+  };
+  grid.innerHTML = Object.entries(labels).map(([key, label]) => `
+    <div class="stat-card">
+      <div class="stat-number">${stats[key] ?? 0}</div>
+      <div class="stat-label">${label}</div>
+    </div>
+  `).join('');
+}
+
+async function loadUsers() {
+  const res = await fetch('/admin/users');
+  const data = await res.json();
+  document.getElementById('usersTable').innerHTML = (data.users || []).map(u => `
+    <tr>
+      <td><strong>${u.username}</strong></td>
+      <td><span class="role-badge ${u.role}">${u.role.toUpperCase()}</span></td>
+      <td>${u.full_name || '—'}</td>
+      <td>${u.patient_id || '—'}</td>
+      <td>${u.abha_id ? `<span style="font-family:'IBM Plex Mono',monospace; font-size:11px;">${u.abha_id}</span>` : '—'}</td>
+      <td>${u.created_at ? u.created_at.substring(0, 16).replace('T', ' ') : '—'}</td>
+    </tr>
+  `).join('');
+}
+
+async function loadAuditLogs() {
+  try {
+    const res = await fetch('/admin/audit-logs');
+    const data = await res.json();
+    const table = document.getElementById('auditLogsTable');
+    const logs = data.audit_logs || data.logs || [];
+
+    if (logs.length === 0) {
+      table.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--muted);">No compliance audit logs recorded yet.</td></tr>';
+      return;
+    }
+
+    table.innerHTML = logs.map(l => {
+      let tagClass = "action-tag";
+      if (l.action.includes("DPDP")) tagClass += " dpdp";
+      else if (l.action.includes("ABHA")) tagClass += " abha";
+      else if (l.action.includes("PURGE") || l.action.includes("WIPE")) tagClass += " purge";
+
+      return `
+        <tr>
+          <td style="font-size:11.5px; color:var(--muted);">${l.timestamp ? l.timestamp.substring(0, 19).replace('T', ' ') : '—'}</td>
+          <td><span class="${tagClass}">${l.action}</span></td>
+          <td><strong>${l.patient_id || '—'}</strong></td>
+          <td style="font-family:'IBM Plex Mono',monospace; font-size:11px;">${l.abha_id || '—'}</td>
+          <td style="font-size:12.5px;">${l.details || '—'}</td>
+        </tr>
+      `;
+    }).join('');
+  } catch (err) {
+    console.error("Audit log fetch error:", err);
+  }
+}
+
+async function createStaff() {
+  const full_name = document.getElementById('newFullName').value.trim();
+  const username = document.getElementById('newUsername').value.trim();
+  const password = document.getElementById('newPassword').value;
+  const role = document.getElementById('newRole').value;
+  const status = document.getElementById('createStatus');
+
+  if (!username || !password) {
+    status.textContent = 'Username and password are required.';
+    status.className = 'status-msg error';
+    return;
+  }
+
+  try {
+    const res = await fetch('/admin/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password, full_name, role }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      status.textContent = `${role} account "${username}" created successfully.`;
+      status.className = 'status-msg success';
+      document.getElementById('newFullName').value = '';
+      document.getElementById('newUsername').value = '';
+      document.getElementById('newPassword').value = '';
+      loadUsers();
+      loadStats();
+    } else {
+      status.textContent = data.message || data.detail || 'Could not create account.';
+      status.className = 'status-msg error';
+    }
+  } catch (err) {
+    status.textContent = 'Server connection error: ' + err.message;
+    status.className = 'status-msg error';
+  }
+}
+
+async function resetData() {
+  if (!confirm('Warning: This will permanently wipe all patient records, intake forms, and summaries for demo reset. Continue?')) return;
+
+  const status = document.getElementById('resetStatus');
+  try {
+    const res = await fetch('/admin/reset', { method: 'POST' });
+    if (res.ok) {
+      status.textContent = 'All patient clinical data successfully reset.';
+      status.className = 'status-msg success';
+      loadStats();
+      loadAuditLogs();
+    } else {
+      status.textContent = 'Failed to reset data.';
+      status.className = 'status-msg error';
+    }
+  } catch (err) {
+    status.textContent = 'Server error: ' + err.message;
+    status.className = 'status-msg error';
+  }
+}
+
+async function logout() {
+  await fetch('/auth/logout', { method: 'POST' });
+  window.location.href = '/login';
+}
+
+checkAuth();
+</script>
+</body>
+</html>
+

@@ -1,0 +1,16 @@
+Patient Case Record
+Date: 2024-03-10
+Patient presented with complaints of chronic lower back pain and mild joint stiffness.
+
+Diagnosis: Lumbar spondylosis, Osteoarthritis (early stage, knee joints).
+
+Prescribed:
+- Rasnasaptak Kwath, 15ml twice daily before food, for 30 days
+- Mahanarayan Taila, for external application, once daily at night, for 30 days
+
+Investigations done:
+- ESR: 22 mm/hr (reference range: 0-20 mm/hr)
+- Serum Uric Acid: 5.2 mg/dL (reference range: 3.5-7.2 mg/dL)
+
+No history of fever or recent surgery.
+Patient advised Panchakarma consultation for further management.

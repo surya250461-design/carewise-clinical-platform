@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Starbucks — Unified Healthcare Login &amp; ABHA Check-In</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #0D9488;
+    --primary-dark: #0F766E;
+    --primary-light: #F0FDFA;
+    --primary-border: #99F6E4;
+    --accent: #0284C7;
+    --accent-light: #E0F2FE;
+    --doc-color: #0D9488;
+    --pat-color: #0284C7;
+    --admin-color: #6366F1;
+    --surface: #FFFFFF;
+    --surface-alt: #F8FAFC;
+    --surface-card: rgba(255, 255, 255, 0.92);
+    --bg: #0B1120;
+    --ink: #0F172A;
+    --ink-light: #334155;
+    --muted: #64748B;
+    --line: #E2E8F0;
+    --danger: #EF4444;
+    --danger-bg: #FEF2F2;
+    --success: #10B981;
+    --success-bg: #ECFDF5;
+    --radius-lg: 24px;
+    --radius-md: 14px;
+    --radius-sm: 10px;
+    --shadow-card: 0 20px 45px -10px rgba(15, 23, 42, 0.35), 0 8px 20px -6px rgba(15, 23, 42, 0.2);
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #0B1120;
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.5;
+    padding: 24px 16px;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Real-Time Floating Particle Background Canvas */
+  #particleCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* Ambient Glowing Blur Orbs */
+  .ambient-orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(95px);
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.38;
+    animation: floatOrb 18s infinite alternate ease-in-out;
+  }
+  .ambient-orb-1 {
+    width: 440px; height: 440px;
+    background: radial-gradient(circle, #0D9488 0%, rgba(13,148,136,0) 70%);
+    top: -80px; left: -80px;
+  }
+  .ambient-orb-2 {
+    width: 480px; height: 480px;
+    background: radial-gradient(circle, #0284C7 0%, rgba(2,132,199,0) 70%);
+    bottom: -100px; right: -80px;
+    animation-duration: 22s;
+  }
+  .ambient-orb-3 {
+    width: 360px; height: 360px;
+    background: radial-gradient(circle, #6366F1 0%, rgba(99,102,241,0) 70%);
+    top: 35%; left: 60%;
+    animation-duration: 25s;
+  }
+
+  @keyframes floatOrb {
+    0% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(50px, 35px) scale(1.1); }
+    100% { transform: translate(-35px, 50px) scale(0.95); }
+  }
+
+  /* Top Nav / Language Switcher Bar */
+  .top-gateway-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 28px;
+    background: rgba(11, 17, 32, 0.7);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+  .nav-logo-badge {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #0D9488, #0284C7);
+    color: white;
+    font-size: 17px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 10px rgba(13, 148, 136, 0.4);
+  }
+  .nav-title {
+    color: white;
+    font-weight: 800;
+    font-size: 17px;
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+
+  .nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .lang-select-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 999px;
+    padding: 6px 14px;
+    transition: all 0.2s ease;
+  }
+  .lang-select-wrap:hover {
+    background: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+  .lang-icon { font-size: 14px; color: #38BDF8; }
+  .lang-select {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    outline: none;
+  }
+  .lang-select option {
+    background: #0F172A;
+    color: white;
+  }
+
+  /* Main Glassmorphic Portal Card */
+  .portal-container {
+    width: 100%;
+    max-width: 500px;
+    position: relative;
+    z-index: 10;
+    margin-top: 60px;
+    margin-bottom: 20px;
+    animation: portalFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes portalFadeIn {
+    from { opacity: 0; transform: translateY(18px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .portal-card {
+    background: var(--surface-card);
+    backdrop-filter: blur(24px);
+    border: 1.5px solid rgba(255, 255, 255, 0.6);
+    border-radius: var(--radius-lg);
+    padding: 36px 32px 30px;
+    box-shadow: var(--shadow-card);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .portal-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, #0D9488, #0284C7, #6366F1);
+    border-top-left-radius: var(--radius-lg);
+    border-top-right-radius: var(--radius-lg);
+  }
+
+  /* Header inside Card */
+  .card-header {
+    text-align: center;
+    margin-bottom: 26px;
+  }
+  .card-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: #F0FDFA;
+    color: #0F766E;
+    border: 1px solid #99F6E4;
+    margin-bottom: 10px;
+    letter-spacing: 0.02em;
+  }
+  .card-title {
+    font-size: 23px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin: 0 0 6px;
+  }
+  .card-subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  /* Micro-Animated 3-Option Role Switcher */
+  .role-tabs-wrapper {
+    position: relative;
+    background: #E2E8F0;
+    border-radius: 16px;
+    padding: 4px;
+    margin-bottom: 28px;
+    display: flex;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+  }
+
+  /* Sliding Indicator Pill */
+  .role-indicator-pill {
+    position: absolute;
+    top: 4px;
+    bottom: 4px;
+    left: 4px;
+    width: calc(33.333% - 2.66px);
+    border-radius: 12px;
+    background: #FFFFFF;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.04);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 1;
+  }
+
+  .role-tab-btn {
+    flex: 1;
+    position: relative;
+    z-index: 2;
+    border: none;
+    background: transparent;
+    padding: 11px 8px;
+    border-radius: 12px;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--muted);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    transition: color 0.2s ease, transform 0.15s ease;
+  }
+  .role-tab-btn:hover { color: var(--ink); }
+  .role-tab-btn:active { transform: scale(0.96); }
+  .role-tab-btn.active { color: var(--ink); font-weight: 800; }
+
+  .tab-icon { font-size: 17px; line-height: 1; }
+  .tab-label { font-size: 12px; line-height: 1.2; }
+
+  /* Tab-specific indicator color accents */
+  .role-tabs-wrapper[data-active="doctor"] .role-indicator-pill {
+    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.25), 0 2px 4px rgba(0,0,0,0.04);
+  }
+  .role-tabs-wrapper[data-active="patient"] .role-indicator-pill {
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.25), 0 2px 4px rgba(0,0,0,0.04);
+  }
+  .role-tabs-wrapper[data-active="admin"] .role-indicator-pill {
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.25), 0 2px 4px rgba(0,0,0,0.04);
+  }
+
+  /* Form Container & Morphing Transitions */
+  .form-section {
+    display: none;
+    animation: formFade 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .form-section.active { display: block; }
+
+  @keyframes formFade {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Micro-Interactions on Interactive Input Fields */
+  .form-group {
+    margin-bottom: 18px;
+    position: relative;
+  }
+
+  .input-label {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--ink-light);
+    margin-bottom: 6px;
+    transition: color 0.15s ease;
+  }
+
+  .input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .form-input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--ink);
+    background: var(--surface-alt);
+    outline: none;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .form-input:hover { border-color: #CBD5E1; }
+  .form-input:focus {
+    border-color: var(--primary);
+    background: #FFFFFF;
+    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.12);
+    transform: translateY(-1px);
+  }
+
+  /* Doctor focus accent */
+  .form-doctor .form-input:focus {
+    border-color: var(--doc-color);
+    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.12);
+  }
+  /* Patient focus accent */
+  .form-patient .form-input:focus {
+    border-color: var(--pat-color);
+    box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.12);
+  }
+  /* Admin focus accent */
+  .form-admin .form-input:focus {
+    border-color: var(--admin-color);
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
+  }
+
+  .input-icon-right {
+    position: absolute;
+    right: 12px;
+    color: var(--muted);
+    font-size: 15px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.15s ease, transform 0.1s ease;
+  }
+  .input-icon-right:hover { color: var(--ink); transform: scale(1.1); }
+
+  /* Interactive CTA Buttons with Shimmer & Scale Bounce */
+  .btn-submit {
+    width: 100%;
+    padding: 14px 20px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 14.5px;
+    font-weight: 700;
+    color: white;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    margin-top: 8px;
+  }
+
+  /* Shimmer sweep micro-animation */
+  .btn-submit::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+    transition: left 0.6s ease;
+  }
+  .btn-submit:hover::after { left: 100%; }
+
+  .btn-submit:hover {
+    transform: translateY(-2px);
+  }
+  .btn-submit:active {
+    transform: translateY(1px) scale(0.98);
+  }
+  .btn-submit:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn-doctor {
+    background: linear-gradient(135deg, #0D9488 0%, #0F766E 100%);
+    box-shadow: 0 6px 18px rgba(13, 148, 136, 0.35);
+  }
+  .btn-doctor:hover { box-shadow: 0 8px 24px rgba(13, 148, 136, 0.45); }
+
+  .btn-patient {
+    background: linear-gradient(135deg, #0284C7 0%, #1E40AF 100%);
+    box-shadow: 0 6px 18px rgba(2, 132, 199, 0.35);
+  }
+  .btn-patient:hover { box-shadow: 0 8px 24px rgba(2, 132, 199, 0.45); }
+
+  .btn-admin {
+    background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
+    box-shadow: 0 6px 18px rgba(99, 102, 241, 0.35);
+  }
+  .btn-admin:hover { box-shadow: 0 8px 24px rgba(99, 102, 241, 0.45); }
+
+  /* One-Click Demo Credentials Box */
+  .demo-box {
+    margin-top: 22px;
+    background: var(--surface-alt);
+    border: 1px dashed var(--line);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+  }
+  .demo-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .demo-chips {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .demo-chip {
+    flex: 1;
+    min-width: 130px;
+    padding: 7px 10px;
+    background: #FFFFFF;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-light);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    transition: all 0.15s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  }
+  .demo-chip:hover {
+    border-color: var(--primary);
+    color: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(13, 148, 136, 0.12);
+  }
+  .demo-chip:active { transform: scale(0.97); }
+
+  /* Micro Spinner */
+  .spinner-dot {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255,255,255,0.35);
+    border-radius: 50%;
+    border-top-color: #FFFFFF;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Dynamic Error Banner */
+  .error-toast {
+    display: none;
+    background: var(--danger-bg);
+    border: 1px solid #FCA5A5;
+    color: #991B1B;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 12.5px;
+    font-weight: 600;
+    margin-bottom: 18px;
+    animation: shakeToast 0.3s ease;
+  }
+  .error-toast.visible { display: flex; align-items: center; gap: 8px; }
+
+  @keyframes shakeToast {
+    0%, 100% { transform: translateX(0); }
+    25%, 75% { transform: translateX(-4px); }
+    50% { transform: translateX(4px); }
+  }
+
+  /* Compliance & Trust Badges */
+  .compliance-footer {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+  }
+  .compliance-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* Responsive tweak */
+  @media (max-width: 480px) {
+    .portal-card { padding: 28px 20px 24px; }
+    .top-gateway-bar { padding: 12px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Real-time Animated Particle Background -->
+<canvas id="particleCanvas"></canvas>
+<div class="ambient-orb ambient-orb-1"></div>
+<div class="ambient-orb ambient-orb-2"></div>
+<div class="ambient-orb ambient-orb-3"></div>
+
+<!-- Top Gateway Nav Bar with Reactive Multi-Language Dropdown -->
+<header class="top-gateway-bar">
+  <div class="nav-brand">
+    <div class="nav-logo-badge">🩺</div>
+    <h2 class="nav-title">Starbucks</h2>
+  </div>
+
+  <div class="nav-actions">
+    <div class="lang-select-wrap" title="Change Language / भाषा बदलें">
+      <span class="lang-icon">🌐</span>
+      <select class="lang-select" id="langSelect" onchange="changeLanguage(this.value)">
+        <option value="en">English</option>
+        <option value="hi">हिंदी (Hindi)</option>
+        <option value="bn">বাংলা (Bengali)</option>
+        <option value="mr">मराठी (Marathi)</option>
+        <option value="ta">தமிழ் (Tamil)</option>
+        <option value="te">తెలుగు (Telugu)</option>
+        <option value="kn">ಕನ್ನಡ (Kannada)</option>
+        <option value="ml">മലയാളം (Malayalam)</option>
+        <option value="gu">ગુજરાતી (Gujarati)</option>
+      </select>
+    </div>
+  </div>
+</header>
+
+<!-- Main Portal Card -->
+<main class="portal-container">
+  <div class="portal-card">
+
+    <!-- Header Section -->
+    <div class="card-header">
+      <div class="card-badge" id="headerBadge">
+        <span>⚡ ABDM M3 &amp; DPDP 2023 Verified</span>
+      </div>
+      <h1 class="card-title" id="cardMainTitle" data-i18n="portalTitle">Hospital Clinical Gateway</h1>
+      <p class="card-subtitle" id="cardMainSub" data-i18n="portalSubtitle">Select your role to access your specialized healthcare portal</p>
+    </div>
+
+    <!-- Micro-Animated 3-Option Role Switcher -->
+    <div class="role-tabs-wrapper" id="roleTabsWrapper" data-active="doctor">
+      <div class="role-indicator-pill" id="roleIndicatorPill"></div>
+
+      <button type="button" class="role-tab-btn active" id="tabDoctor" onclick="selectRole('doctor')">
+        <span class="tab-icon">🩺</span>
+        <span class="tab-label" data-i18n="tabDoctor">Doctor Login</span>
+      </button>
+
+      <button type="button" class="role-tab-btn" id="tabPatient" onclick="selectRole('patient')">
+        <span class="tab-icon">👤</span>
+        <span class="tab-label" data-i18n="tabPatient">Patient Kiosk</span>
+      </button>
+
+      <button type="button" class="role-tab-btn" id="tabAdmin" onclick="selectRole('admin')">
+        <span class="tab-icon">🛡️</span>
+        <span class="tab-label" data-i18n="tabAdmin">Admin Portal</span>
+      </button>
+    </div>
+
+    <!-- Error Toast -->
+    <div class="error-toast" id="errorToast">
+      <span>⚠️</span>
+      <span id="errorToastMsg">Authentication error</span>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- OPTION 1: DOCTOR / PHYSICIAN LOGIN             -->
+    <!-- ============================================== -->
+    <div class="form-section form-doctor active" id="section-doctor">
+      <div class="form-group">
+        <label class="input-label" for="docUsername" data-i18n="lblDoctorUsername">Physician Staff Username</label>
+        <div class="input-wrapper">
+          <input type="text" id="docUsername" class="form-input" placeholder="e.g. doctor" data-placeholder="phDocUser" autocomplete="username" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="input-label" for="docPassword" data-i18n="lblDoctorPassword">Doctor Password</label>
+        <div class="input-wrapper">
+          <input type="password" id="docPassword" class="form-input" placeholder="••••••••" data-placeholder="phDocPass" autocomplete="current-password" />
+          <button type="button" class="input-icon-right" onclick="togglePassword('docPassword', this)" title="Toggle view">👁️</button>
+        </div>
+      </div>
+
+      <button type="button" class="btn-submit btn-doctor" id="btnDoctorSubmit" onclick="handleDoctorLogin()">
+        <span id="btnDoctorText" data-i18n="btnDoctorLogin">🩺 Enter Physician Clinical Station →</span>
+      </button>
+
+      <div class="demo-box">
+        <div class="demo-title">
+          <span data-i18n="demoHeader">One-Click Physician Demo</span>
+          <span style="font-size:10px; color:var(--primary); font-weight:800;">OPD Active</span>
+        </div>
+        <div class="demo-chips">
+          <button type="button" class="demo-chip" onclick="fillDoctorDemo('doctor', 'doctor123')">
+            👨‍⚕️ Dr. Sharma (MD Physician)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- OPTION 2: PATIENT KIOSK & ABHA WALK-IN         -->
+    <!-- ============================================== -->
+    <div class="form-section form-patient" id="section-patient">
+      <div class="form-group">
+        <label class="input-label" for="abhaIdInput" data-i18n="lblAbhaId">14-Digit ABHA ID / ABDM Address</label>
+        <div class="input-wrapper">
+          <input
+            type="text"
+            id="abhaIdInput"
+            class="form-input"
+            style="font-family:'IBM Plex Mono',monospace; letter-spacing:0.04em;"
+            placeholder="91-4523-8819-2041 or user@abdm"
+            data-placeholder="phAbhaId"
+            oninput="formatAbha(this)"
+          />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="input-label" for="patientFullName" data-i18n="lblPatientName">Patient Full Name (Optional)</label>
+        <div class="input-wrapper">
+          <input type="text" id="patientFullName" class="form-input" placeholder="e.g. Ramesh Chandra" data-placeholder="phPatName" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="input-label" for="abhaOtpInput" data-i18n="lblAbhaOtp">Aadhaar / Mobile OTP Verification Code</label>
+        <div class="input-wrapper" style="gap:8px;">
+          <input
+            type="text"
+            id="abhaOtpInput"
+            class="form-input"
+            style="font-family:'IBM Plex Mono',monospace; letter-spacing:0.1em; flex:1;"
+            placeholder="123456"
+            data-placeholder="phAbhaOtp"
+            maxlength="6"
+          />
+          <button type="button" class="demo-chip" style="flex:none; padding:10px 14px; min-width:auto;" onclick="autoFillOtp()" data-i18n="btnDemoOtp">
+            Demo OTP
+          </button>
+        </div>
+      </div>
+
+      <button type="button" class="btn-submit btn-patient" id="btnPatientSubmit" onclick="handlePatientAbhaLogin()">
+        <span id="btnPatientText" data-i18n="btnPatientLogin">🛡 Verify ABHA &amp; Start Voice Kiosk Intake →</span>
+      </button>
+
+      <div class="demo-box">
+        <div class="demo-title">
+          <span data-i18n="demoProfiles">Quick Kiosk Test Patients</span>
+          <span style="font-size:10px; color:var(--accent); font-weight:800;">ABDM Validated</span>
+        </div>
+        <div class="demo-chips">
+          <button type="button" class="demo-chip" onclick="fillPatientDemo('91-4523-8819-2041', 'Ramesh Chandra')">
+            🫀 Ramesh (Cardiac Walk-in)
+          </button>
+          <button type="button" class="demo-chip" onclick="fillPatientDemo('14-8921-3310-7762', 'Sunita Devi')">
+            🤧 Sunita (Cold &amp; Cough)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- OPTION 3: HOSPITAL ADMINISTRATOR LOGIN         -->
+    <!-- ============================================== -->
+    <div class="form-section form-admin" id="section-admin">
+      <div class="form-group">
+        <label class="input-label" for="adminUsername" data-i18n="lblAdminUsername">Administrator Username</label>
+        <div class="input-wrapper">
+          <input type="text" id="adminUsername" class="form-input" placeholder="e.g. admin" data-placeholder="phAdminUser" autocomplete="username" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="input-label" for="adminPassword" data-i18n="lblAdminPassword">Admin Password</label>
+        <div class="input-wrapper">
+          <input type="password" id="adminPassword" class="form-input" placeholder="••••••••" data-placeholder="phAdminPass" autocomplete="current-password" />
+          <button type="button" class="input-icon-right" onclick="togglePassword('adminPassword', this)" title="Toggle view">👁️</button>
+        </div>
+      </div>
+
+      <button type="button" class="btn-submit btn-admin" id="btnAdminSubmit" onclick="handleAdminLogin()">
+        <span id="btnAdminText" data-i18n="btnAdminLogin">🛡️ Sign In to Hospital Admin &amp; DPDP Console →</span>
+      </button>
+
+      <div class="demo-box">
+        <div class="demo-title">
+          <span data-i18n="demoAdmin">Administrator Demo</span>
+          <span style="font-size:10px; color:var(--admin-color); font-weight:800;">Full Audit Access</span>
+        </div>
+        <div class="demo-chips">
+          <button type="button" class="demo-chip" onclick="fillAdminDemo('admin', 'admin123')">
+            🏛️ Hospital Super-Admin
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Compliance Footer -->
+    <div class="compliance-footer">
+      <div class="compliance-item">
+        <span>🛡️</span>
+        <span data-i18n="footerAbha">ABDM Milestone 3</span>
+      </div>
+      <div class="compliance-item">
+        <span>🔒</span>
+        <span data-i18n="footerDpdp">DPDP Act 2023 Compliant</span>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+// -------------------------------------------------------------
+// Comprehensive Multilingual Translation Dictionaries (9 Indian Languages)
+// -------------------------------------------------------------
+const I18N = {
+  en: {
+    portalTitle: "Hospital Clinical Gateway",
+    portalSubtitle: "Select your role to access your specialized healthcare portal",
+    tabDoctor: "Doctor Login",
+    tabPatient: "Patient Kiosk",
+    tabAdmin: "Admin Portal",
+    lblDoctorUsername: "Physician Staff Username",
+    lblDoctorPassword: "Doctor Password",
+    btnDoctorLogin: "🩺 Enter Physician Clinical Station →",
+    demoHeader: "One-Click Physician Demo",
+    lblAbhaId: "14-Digit ABHA ID / ABDM Address",
+    lblPatientName: "Patient Full Name (Optional)",
+    lblAbhaOtp: "Aadhaar / Mobile OTP Verification Code",
+    btnDemoOtp: "Demo OTP",
+    btnPatientLogin: "🛡 Verify ABHA & Start Voice Kiosk Intake →",
+    demoProfiles: "Quick Kiosk Test Patients",
+    lblAdminUsername: "Administrator Username",
+    lblAdminPassword: "Admin Password",
+    btnAdminLogin: "🛡️ Sign In to Hospital Admin & DPDP Console →",
+    demoAdmin: "Administrator Demo",
+    footerAbha: "ABDM Milestone 3",
+    footerDpdp: "DPDP Act 2023 Compliant",
+    phDocUser: "e.g. doctor",
+    phDocPass: "••••••••",
+    phAbhaId: "91-4523-8819-2041 or user@abdm",
+    phPatName: "e.g. Ramesh Chandra",
+    phAbhaOtp: "123456",
+    phAdminUser: "e.g. admin",
+    phAdminPass: "••••••••"
+  },
+  hi: {
+    portalTitle: "अस्पताल क्लिनिकल गेटवे",
+    portalSubtitle: "अपने विशेष हेल्थकेयर पोर्टल में प्रवेश करने के लिए अपनी भूमिका चुनें",
+    tabDoctor: "डॉक्टर लॉगिन",
+    tabPatient: "मरीज़ कियोस्क",
+    tabAdmin: "एडमिन पोर्टल",
+    lblDoctorUsername: "चिकित्सक स्टाफ़ यूज़रनेम",
+    lblDoctorPassword: "डॉक्टर पासवर्ड",
+    btnDoctorLogin: "🩺 डॉक्टर क्लिनिकल स्टेशन में प्रवेश करें →",
+    demoHeader: "एक-क्लिक डॉक्टर डेमो",
+    lblAbhaId: "14-अंकीय आभा (ABHA) आईडी / पता",
+    lblPatientName: "मरीज़ का पूरा नाम (वैकल्पिक)",
+    lblAbhaOtp: "आधार / मोबाइल ओटीपी सत्यापन कोड",
+    btnDemoOtp: "डेमो OTP",
+    btnPatientLogin: "🛡 आभा सत्यापित करें व आवाज़ कियोस्क शुरू करें →",
+    demoProfiles: "कियोस्क टेस्ट मरीज़",
+    lblAdminUsername: "एडमिनिस्ट्रेटर यूज़रनेम",
+    lblAdminPassword: "एडमिन पासवर्ड",
+    btnAdminLogin: "🛡️ अस्पताल एडमिन व डीपीईपी कंसोल में जाएं →",
+    demoAdmin: "एडमिनिस्ट्रेटर डेमो",
+    footerAbha: "ABDM माइलस्टोन 3",
+    footerDpdp: "DPDP अधिनियम 2023 अनुपालन",
+    phDocUser: "उदा. doctor",
+    phDocPass: "••••••••",
+    phAbhaId: "91-4523-8819-2041 या user@abdm",
+    phPatName: "उदा. रमेश चंद्र",
+    phAbhaOtp: "123456",
+    phAdminUser: "उदा. admin",
+    phAdminPass: "••••••••"
+  },
+  bn: {
+    portalTitle: "হাসপাতাল ক্লিনিক্যাল গেটওয়ে",
+    portalSubtitle: "আপনার হেলথকেয়ার পোর্টালে প্রবেশের জন্য ভূমিকা নির্বাচন করুন",
+    tabDoctor: "ডাক্তার লগইন",
+    tabPatient: "রোগী কিয়স্ক",
+    tabAdmin: "অ্যাডমিন পোর্টাল",
+    lblDoctorUsername: "চিকিৎসক ইউজারনেম",
+    lblDoctorPassword: "ডাক্তার পাসওয়ার্ড",
+    btnDoctorLogin: "🩺 চিকিৎসক স্টেশনে প্রবেশ করুন →",
+    demoHeader: "এক-ক্লিক ডাক্তার ডেমো",
+    lblAbhaId: "১৪-সংখ্যার আভা (ABHA) আইডি",
+    lblPatientName: "রোগীর পুরো নাম (ঐচ্ছিক)",
+    lblAbhaOtp: "আধার / মোবাইল ওটিপি কোড",
+    btnDemoOtp: "ডেমো OTP",
+    btnPatientLogin: "🛡 আভা যাচাই করে কিয়স্ক শুরু করুন →",
+    demoProfiles: "টেস্ট রোগী প্রোফাইল",
+    lblAdminUsername: "অ্যাডমিন ইউজারনেম",
+    lblAdminPassword: "অ্যাডমিন পাসওয়ার্ড",
+    btnAdminLogin: "🛡️ হাসপাতাল অ্যাডমিন প্যানেল খুলুন →",
+    demoAdmin: "অ্যাডমিনিস্ট্রেটর ডেমো",
+    footerAbha: "ABDM মাইলস্টোন ৩",
+    footerDpdp: "DPDP আইন ২০২৩ সম্মত",
+    phDocUser: "যেমন doctor",
+    phDocPass: "••••••••",
+    phAbhaId: "91-4523-8819-2041 বা user@abdm",
+    phPatName: "যেমন রমেশ চন্দ্র",
+    phAbhaOtp: "123456",
+    phAdminUser: "যেমন admin",
+    phAdminPass: "••••••••"
+  },
+  mr: {
+    portalTitle: "हॉस्पिटल क्लिनिकल गेटवे",
+    portalSubtitle: "आपल्या हेल्थकेअर पोर्टलमध्ये प्रवेश करण्यासाठी भूमिका निवडा",
+    tabDoctor: "डॉक्टर लॉगिन",
+    tabPatient: "रुग्ण कियोस्क",
+    tabAdmin: "अ‍ॅडमिन पोर्टल",
+    lblDoctorUsername: "डॉक्टर युजरनेम",
+    lblDoctorPassword: "डॉक्टर पासवर्ड",
+    btnDoctorLogin: "🩺 डॉक्टर क्लिनिकल स्टेशनमध्ये जा →",
+    demoHeader: "वन-क्लिक डॉक्टर डेमो",
+    lblAbhaId: "१४-अंकी आभा (ABHA) क्रमांक",
+    lblPatientName: "रुग्णाचे पूर्ण नाव (पर्यायी)",
+    lblAbhaOtp: "आधार / मोबाईल ओटीपी पडताळणी कोड",
+    btnDemoOtp: "डेमो OTP",
+    btnPatientLogin: "🛡 आभा पडताळा आणि तपासणी सुरू करा →",
+    demoProfiles: "कियोस्क टेस्ट रुग्ण",
+    lblAdminUsername: "अ‍ॅडमिनिस्ट्रेटर युजरनेम",
+    lblAdminPassword: "अ‍ॅडमिन पासवर्ड",
+    btnAdminLogin: "🛡️ हॉस्पिटल अ‍ॅडमिन कन्सोलमध्ये प्रवेश करा →",
+    demoAdmin: "अ‍ॅडमिनिस्ट्रेटर डेमो",
+    footerAbha: "ABDM टप्पा ३",
+    footerDpdp: "DPDP कायदा २०२३ सुसंगत",
+    phDocUser: "उदा. doctor",
+    phDocPass: "••••••••",
+    phAbhaId: "91-4523-8819-2041 किंवा user@abdm",
+    phPatName: "उदा. रमेश चंद्र",
+    phAbhaOtp: "123456",
+    phAdminUser: "उदा. admin",
+    phAdminPass: "••••••••"
+  },
+  ta: {
+    portalTitle: "மருத்துவமனை மருத்துவ நுழைவாயில்",
+    portalSubtitle: "உங்கள் சுகாதார போர்ட்டலில் நுழைய உங்கள் பங்கைத் தேர்ந்தெடுக்கவும்",
+    tabDoctor: "மருத்துவர் உள்நுழைவு",
+    tabPatient: "நோயாளி கியோஸ்க்",
+    tabAdmin: "நிர்வாகி போர்டல்",
+    lblDoctorUsername: "மருத்துவர் பயனர் பெயர்",
+    lblDoctorPassword: "கடவுச்சொல்",
+    btnDoctorLogin: "🩺 மருத்துவர் நிலையத்திற்குச் செல்லவும் →",
+    demoHeader: "ஒரு கிளிக் மருத்துவர் டெமோ",
+    lblAbhaId: "14-இலக்க ஆபா (ABHA) எண்",
+    lblPatientName: "நோயாளி முழுப் பெயர் (விருப்பத்திற்குரியது)",
+    lblAbhaOtp: "ஆதார் / மொபைல் OTP குறியீடு",
+    btnDemoOtp: "டெமோ OTP",
+    btnPatientLogin: "🛡 ஆபா சரிபார்த்து கியோஸ்க் தொடங்கவும் →",
+    demoProfiles: "டெமோ நோயாளி விவரங்கள்",
+    lblAdminUsername: "நிர்வாகி பயனர் பெயர்",
+    lblAdminPassword: "நிர்வாகி கடவுச்சொல்",
+    btnAdminLogin: "🛡️ நிர்வாகக் கன்சோலில் நுழையவும் →",
+    demoAdmin: "நிர்வாகி டெமோ",
+    footerAbha: "ABDM மைல்ஸ்டோன் 3",
+    footerDpdp: "DPDP சட்டம் 2023 இணக்கம்",
+    phDocUser: "எ.கா. doctor",
+    phDocPass: "••••••••",
+    phAbhaId: "91-4523-8819-2041 அல்லது user@abdm",
+    phPatName: "எ.கா. ரமேஷ் சந்திரா",
+    phAbhaOtp: "123456",
+    phAdminUser: "எ.கா. admin",
+    phAdminPass: "••••••••"
+  },
+  te: {
+    portalTitle: "హాస్పిటల్ క్లినికల్ గేట్‌వే",
+    portalSubtitle: "మీ ఆరోగ్య సంరక్షణ పోర్టల్‌ను యాక్సెస్ చేయడానికి మీ పాత్రను ఎంచుకోండి",
+    tabDoctor: "డాక్టర్ లాగిన్",
+    tabPatient: "పేషెంట్ కియోస్క్",
+    tabAdmin: "అడ్మిన్ పోర్టల్",
+    lblDoctorUsername: "డాక్టర్ యూజర్‌నేమ్",
+    lblDoctorPassword: "డాక్టర్ పాస్‌వర్డ్",
+    btnDoctorLogin: "🩺 డాక్టర్ క్లినికల్ స్టేషన్‌లోకి ప్రవేశించండి →",
+    demoHeader: "వన్-క్లిక్ డాక్టర్ డెమో",
+    lblAbhaId: "14-అంకెల ఆభా (ABHA) ఐడీ",
+    lblPatientName: "పేషెంట్ పూర్తి పేరు (ఐచ్ఛికం)",
+    lblAbhaOtp: "ఆధార్ / మొబైల్ OTP వెరిఫికేషన్ కోడ్",
+    btnDemoOtp: "డెమో OTP",
+    btnPatientLogin: "🛡 ఆభా ధృవీకరించి కియోస్క్ ప్రారంభించండి →",
+    demoProfiles: "కియోస్క్ టెస్ట్ ప్రొఫైల్స్",
+    lblAdminUsername: "అడ్మినిస్ట్రేటర్ యూజర్‌నేమ్",
+    lblAdminPassword: "అడ్మిన్ పాస్‌వర్డ్",
+    btnAdminLogin: "🛡️ హాస్పిటల్ అడ్మిన్ కన్సోల్‌లోకి సైన్ ఇన్ అవ్వండి →",
+    demoAdmin: "అడ్మినిస్ట్రేటర్ డెమో",
+    footerAbha: "ABDM మైలురాయి 3",
+    footerDpdp: "DPDP చట్టం 2023 కంప్లైంట్",
+    phDocUser: "ఉదా. doctor",
+    phDocPass: "••••••••",
+    phAbhaId: "91-4523-8819-2041 లేదా user@abdm",
+    phPatName: "ఉదా. రమేష్ చంద్ర",
+    phAbhaOtp: "123456",
+    phAdminUser: "ఉదా. admin",
+    phAdminPass: "••••••••"
+  },
+  kn: {
+    portalTitle: "ಆಸ್ಪತ್ರೆ ಕ್ಲಿನಿಕಲ್ ಗೇಟ್‌ವೇ",
+    portalSubtitle: "ನಿಮ್ಮ ಹೆಲ್ತ್‌ಕೇರ್ ಪೋರ್ಟಲ್ ಪ್ರವೇಶಿಸಲು ನಿಮ್ಮ ಪಾತ್ರವನ್ನು ಆಯ್ಕೆಮಾಡಿ",
+    tabDoctor: "ವೈದ್ಯರ ಲಾಗಿನ್",
+    tabPatient: "ರೋಗಿಗಳ ಕಿಯೋಸ್ಕ್",
+    tabAdmin: "ಅಡ್ಮಿನ್ ಪೋರ್ಟಲ್",
+    lblDoctorUsername: "ವೈದ್ಯರ ಯೂಸರ್‌ನೇಮ್",
+    lblDoctorPassword: "ಪಾಸ್‌ವರ್ಡ್",
+    btnDoctorLogin: "🩺 ವೈದ್ಯರ ಕ್ಲಿನಿಕಲ್ ನಿಲ್ದಾಣ ಪ್ರವೇಶಿಸಿ →",
+    demoHeader: "ಒಂದು ಕ್ಲಿಕ್ ವೈದ್ಯರ ಡೆಮೊ",
+    lblAbhaId: "14-ಅಂಕಿಯ ಆಭಾ (ABHA) ಐಡಿ",
+    lblPatientName: "ರೋಗಿಯ ಪೂರ್ಣ ಹೆಸರು",
+    lblAbhaOtp: "ಆಧಾರ್ / ಮೊಬೈಲ್ OTP ಕೋಡ್",
+    btnDemoOtp: "ಡೆಮೊ OTP",
+    btnPatientLogin: "🛡 ಆಭಾ ಪರಿಶೀಲಿಸಿ ಕಿಯೋಸ್ಕ್ ಆರಂಭಿಸಿ →",
+    demoProfiles: "ಕಿಯೋಸ್ಕ್ ರೋಗಿಗಳ ಡೆಮೊ",
+    lblAdminUsername: "ಅಡ್ಮಿನ್ ಯೂಸರ್‌ನೇಮ್",
+    lblAdminPassword: "ಅಡ್ಮಿನ್ ಪಾಸ್‌ವರ್ಡ್",
+    btnAdminLogin: "🛡️ ಆಸ್ಪತ್ರೆ ಅಡ್ಮಿನ್ ಪ್ಯಾನೆಲ್‌ಗೆ ಲಾಗಿನ್ ಆಗಿ →",
+    demoAdmin: "ಅಡ್ಮಿನಿಸ್ಟ್ರೇಟರ್ ಡೆಮೊ",
+    footerAbha: "ABDM ಮೈಲಿಗಲ್ಲು 3",
+    footerDpdp: "DPDP ಕಾಯಿದೆ 2023 ಅನುಸರಣೆ",
+    phDocUser: "ಉದಾ. doctor",
+    phDocPass: "••••••••",
+    phAbhaId: "91-4523-8819-2041 ಅಥವಾ user@abdm",
+    phPatName: "ಉದಾ. ರಮೇಶ್ ಚಂದ್ರ",
+    phAbhaOtp: "123456",
+    phAdminUser: "ಉದಾ. admin",
+    phAdminPass: "••••••••"
+  },
+  ml: {
+    portalTitle: "ഹോസ്പിറ്റൽ ക്ലിനിക്കൽ ഗേറ്റ്‌വേ",
+    portalSubtitle: "നിങ്ങളുടെ ആരോഗ്യ പോർട്ടലിലേക്ക് പ്രവേശിക്കാൻ പദവി തിരഞ്ഞെടുക്കുക",
+    tabDoctor: "ഡോക്ടർ ലോഗിൻ",
+    tabPatient: "പേഷ്യന്റ് കിയോസ്ക്",
+    tabAdmin: "അഡ്മിൻ പോർട്ടൽ",
+    lblDoctorUsername: "ഡോക്ടർ യൂസർനാമം",
+    lblDoctorPassword: "പാസ്‌വേഡ്",
+    btnDoctorLogin: "🩺 ഡോക്ടർ സ്റ്റേഷനിലേക്ക് പ്രവേശിക്കുക →",
+    demoHeader: "വൺ-ക്ലിക്ക് ഡോക്ടർ ഡെമോ",
+    lblAbhaId: "14-അക്ക ആഭാ (ABHA) ഐഡി",
+    lblPatientName: "രോഗിയുടെ മുഴുവൻ പേര്",
+    lblAbhaOtp: "ആധാർ / മൊബൈൽ OTP കോഡ്",
+    btnDemoOtp: "ഡെമോ OTP",
+    btnPatientLogin: "🛡 ആഭാ സ്ഥിരീകരിച്ച് കിയോസ്ക് ആരംഭിക്കുക →",
+    demoProfiles: "ടെസ്റ്റ് രോഗി വിവരങ്ങൾ",
+    lblAdminUsername: "അഡ്മിൻ യൂസർനാമം",
+    lblAdminPassword: "അഡ്മിൻ പാസ്‌വേഡ്",
+    btnAdminLogin: "🛡️ ഹോസ്പിറ്റൽ അഡ്മിൻ കൺസോളിലേക്ക് സൈൻ ഇൻ ചെയ്യുക →",
+    demoAdmin: "അഡ്മിനിസ്ട്രേറ്റർ ഡെമോ",
+    footerAbha: "ABDM മൈൽസ്റ്റോൺ 3",
+    footerDpdp: "DPDP നിയമം 2023 പാലിക്കുന്നു",
+    phDocUser: "ഉദാ. doctor",
+    phDocPass: "••••••••",
+    phAbhaId: "91-4523-8819-2041 അല്ലെങ്കിൽ user@abdm",
+    phPatName: "ഉദാ. രമേഷ് ചന്ദ്ര",
+    phAbhaOtp: "123456",
+    phAdminUser: "ഉദാ. admin",
+    phAdminPass: "••••••••"
+  },
+  gu: {
+    portalTitle: "હોસ્પિટલ ક્લિનિકલ ગેટવે",
+    portalSubtitle: "તમારા આરોગ્ય પોર્ટલમાં પ્રવેશવા માટે તમારી ભૂમિકા પસંદ કરો",
+    tabDoctor: "ડોક્ટર લોગિન",
+    tabPatient: "દર્દી કિઓસ્ક",
+    tabAdmin: "એડમિન પોર્ટલ",
+    lblDoctorUsername: "ડોક્ટર યુઝરનેમ",
+    lblDoctorPassword: "ડોક્ટર પાસવર્ડ",
+    btnDoctorLogin: "🩺 ફિઝિશિયન ક્લિનિકલ સ્ટેશનમાં પ્રવેશ કરો →",
+    demoHeader: "વન-ક્લિક ડોક્ટર ડેમો",
+    lblAbhaId: "14-અંક આભા (ABHA) આઈડી",
+    lblPatientName: "દર્દીનું પૂરું નામ (વૈકલ્પિક)",
+    lblAbhaOtp: "આધાર / મોબાઇલ OTP વેરિફિકેશન કોડ",
+    btnDemoOtp: "ડેમો OTP",
+    btnPatientLogin: "🛡 આભા ચકાસો અને કિઓસ્ક શરૂ કરો →",
+    demoProfiles: "કિઓસ્ક ટેસ્ટ દર્દીઓ",
+    lblAdminUsername: "એડમિન યુઝરનેમ",
+    lblAdminPassword: "એડમિન પાસવર્ડ",
+    btnAdminLogin: "🛡️ હોસ્પિટલ એડમિન કન્સોલમાં સાઇન ઇન કરો →",
+    demoAdmin: "એડમિનિસ્ટ્રેટર ડેમો",
+    footerAbha: "ABDM માઇલસ્ટોન 3",
+    footerDpdp: "DPDP અધિનિયમ 2023 સુસંગત",
+    phDocUser: "દા.ત. doctor",
+    phDocPass: "••••••••",
+    phAbhaId: "91-4523-8819-2041 અથવા user@abdm",
+    phPatName: "દા.ત. રમેશ ચંદ્ર",
+    phAbhaOtp: "123456",
+    phAdminUser: "દા.ત. admin",
+    phAdminPass: "••••••••"
+  }
+};
+
+let currentLanguage = localStorage.getItem('kiosk_language') || 'en';
+let currentRole = 'doctor';
+
+function changeLanguage(lang) {
+  currentLanguage = lang;
+  localStorage.setItem('kiosk_language', lang);
+  const sel = document.getElementById('langSelect');
+  if (sel) sel.value = lang;
+  applyLanguageDict(lang);
+}
+
+function applyLanguageDict(lang) {
+  const dict = I18N[lang] || I18N['en'];
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (dict[key]) {
+      el.textContent = dict[key];
+    }
+  });
+  document.querySelectorAll('[data-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-placeholder');
+    if (dict[key]) {
+      el.placeholder = dict[key];
+    }
+  });
+}
+
+// -------------------------------------------------------------
+// Role Switcher Micro-Animations
+// -------------------------------------------------------------
+function selectRole(role) {
+  currentRole = role;
+  hideError();
+
+  const wrapper = document.getElementById('roleTabsWrapper');
+  wrapper.setAttribute('data-active', role);
+
+  const pill = document.getElementById('roleIndicatorPill');
+  const tabDoc = document.getElementById('tabDoctor');
+  const tabPat = document.getElementById('tabPatient');
+  const tabAdm = document.getElementById('tabAdmin');
+
+  tabDoc.classList.toggle('active', role === 'doctor');
+  tabPat.classList.toggle('active', role === 'patient');
+  tabAdm.classList.toggle('active', role === 'admin');
+
+  // Slide indicator pill
+  if (role === 'doctor') {
+    pill.style.transform = 'translateX(0%)';
+  } else if (role === 'patient') {
+    pill.style.transform = 'translateX(100%)';
+  } else if (role === 'admin') {
+    pill.style.transform = 'translateX(200%)';
+  }
+
+  // Switch form section
+  document.getElementById('section-doctor').classList.toggle('active', role === 'doctor');
+  document.getElementById('section-patient').classList.toggle('active', role === 'patient');
+  document.getElementById('section-admin').classList.toggle('active', role === 'admin');
+}
+
+// -------------------------------------------------------------
+// Interactive Helpers & Demo Fillers
+// -------------------------------------------------------------
+function togglePassword(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if (input.type === 'password') {
+    input.type = 'text';
+    btn.textContent = '🙈';
+  } else {
+    input.type = 'password';
+    btn.textContent = '👁️';
+  }
+}
+
+function formatAbha(input) {
+  let val = input.value.replace(/\s+/g, '');
+  if (val.includes('@')) return; // Allow ABHA address e.g. name@abdm
+  let digits = val.replace(/\D/g, '').substring(0, 14);
+  let parts = [];
+  if (digits.length > 0) parts.push(digits.substring(0, 2));
+  if (digits.length > 2) parts.push(digits.substring(2, 6));
+  if (digits.length > 6) parts.push(digits.substring(6, 10));
+  if (digits.length > 10) parts.push(digits.substring(10, 14));
+  input.value = parts.join('-');
+}
+
+function autoFillOtp() {
+  document.getElementById('abhaOtpInput').value = '123456';
+}
+
+function fillDoctorDemo(u, p) {
+  document.getElementById('docUsername').value = u;
+  document.getElementById('docPassword').value = p;
+  hideError();
+}
+
+function fillPatientDemo(abha, name) {
+  document.getElementById('abhaIdInput').value = abha;
+  document.getElementById('patientFullName').value = name;
+  document.getElementById('abhaOtpInput').value = '123456';
+  hideError();
+}
+
+function fillAdminDemo(u, p) {
+  document.getElementById('adminUsername').value = u;
+  document.getElementById('adminPassword').value = p;
+  hideError();
+}
+
+function showError(msg) {
+  const toast = document.getElementById('errorToast');
+  document.getElementById('errorToastMsg').textContent = msg;
+  toast.classList.add('visible');
+}
+
+function hideError() {
+  const toast = document.getElementById('errorToast');
+  toast.classList.remove('visible');
+}
+
+// -------------------------------------------------------------
+// Authentication Actions
+// -------------------------------------------------------------
+async function handleDoctorLogin() {
+  const username = document.getElementById('docUsername').value.trim();
+  const password = document.getElementById('docPassword').value;
+  const btn = document.getElementById('btnDoctorSubmit');
+  const btnText = document.getElementById('btnDoctorText');
+
+  hideError();
+  if (!username || !password) {
+    showError("Please enter your physician username and password.");
+    return;
+  }
+
+  btn.disabled = true;
+  btnText.innerHTML = `<span class="spinner-dot"></span> Authenticating Physician…`;
+
+  try {
+    const res = await fetch('/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      btnText.innerHTML = `✓ Verified! Entering Station…`;
+      setTimeout(() => {
+        window.location.href = '/doctor';
+      }, 350);
+    } else {
+      showError(data.detail || data.message || "Invalid doctor credentials.");
+      btn.disabled = false;
+      btnText.textContent = (I18N[currentLanguage] && I18N[currentLanguage].btnDoctorLogin) || I18N['en'].btnDoctorLogin;
+    }
+  } catch (err) {
+    showError("Server connection failure: " + err.message);
+    btn.disabled = false;
+    btnText.textContent = (I18N[currentLanguage] && I18N[currentLanguage].btnDoctorLogin) || I18N['en'].btnDoctorLogin;
+  }
+}
+
+async function handlePatientAbhaLogin() {
+  const abha = document.getElementById('abhaIdInput').value.trim();
+  const name = document.getElementById('patientFullName').value.trim();
+  const otp = document.getElementById('abhaOtpInput').value.trim() || '123456';
+  const btn = document.getElementById('btnPatientSubmit');
+  const btnText = document.getElementById('btnPatientText');
+
+  hideError();
+  if (!abha) {
+    showError("Please enter your 14-digit ABHA ID or ABDM address.");
+    return;
+  }
+
+  btn.disabled = true;
+  btnText.innerHTML = `<span class="spinner-dot"></span> Verifying with ABDM Gateway…`;
+
+  try {
+    const res = await fetch('/auth/abha-verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ abha_id: abha, full_name: name, otp: otp })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      btnText.innerHTML = `✓ ABHA Verified! Starting Kiosk…`;
+      setTimeout(() => {
+        window.location.href = '/intake';
+      }, 350);
+    } else {
+      showError(data.detail || data.message || "ABHA verification failed.");
+      btn.disabled = false;
+      btnText.textContent = (I18N[currentLanguage] && I18N[currentLanguage].btnPatientLogin) || I18N['en'].btnPatientLogin;
+    }
+  } catch(err) {
+    showError("Connection error: " + err.message);
+    btn.disabled = false;
+    btnText.textContent = (I18N[currentLanguage] && I18N[currentLanguage].btnPatientLogin) || I18N['en'].btnPatientLogin;
+  }
+}
+
+async function handleAdminLogin() {
+  const username = document.getElementById('adminUsername').value.trim();
+  const password = document.getElementById('adminPassword').value;
+  const btn = document.getElementById('btnAdminSubmit');
+  const btnText = document.getElementById('btnAdminText');
+
+  hideError();
+  if (!username || !password) {
+    showError("Please enter administrator credentials.");
+    return;
+  }
+
+  btn.disabled = true;
+  btnText.innerHTML = `<span class="spinner-dot"></span> Accessing Governance Gateway…`;
+
+  try {
+    const res = await fetch('/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      if (data.role !== 'admin') {
+        showError("This account does not possess hospital administrator clearance.");
+        btn.disabled = false;
+        btnText.textContent = (I18N[currentLanguage] && I18N[currentLanguage].btnAdminLogin) || I18N['en'].btnAdminLogin;
+        return;
+      }
+      btnText.innerHTML = `✓ Clearance Confirmed!`;
+      setTimeout(() => {
+        window.location.href = '/admin';
+      }, 350);
+    } else {
+      showError(data.detail || data.message || "Admin authentication failed.");
+      btn.disabled = false;
+      btnText.textContent = (I18N[currentLanguage] && I18N[currentLanguage].btnAdminLogin) || I18N['en'].btnAdminLogin;
+    }
+  } catch (err) {
+    showError("Server error: " + err.message);
+    btn.disabled = false;
+    btnText.textContent = (I18N[currentLanguage] && I18N[currentLanguage].btnAdminLogin) || I18N['en'].btnAdminLogin;
+  }
+}
+
+// -------------------------------------------------------------
+// Real-Time Floating Particle Background
+// -------------------------------------------------------------
+function initParticleCanvas() {
+  const canvas = document.getElementById('particleCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+
+  const count = Math.min(50, Math.floor((width * height) / 22000));
+  const particles = [];
+  const colors = ['13, 148, 136', '2, 132, 199', '99, 102, 241'];
+
+  for (let i = 0; i < count; i++) {
+    particles.push({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      vx: (Math.random() - 0.5) * 0.45,
+      vy: (Math.random() - 0.5) * 0.45,
+      radius: Math.random() * 2 + 1,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      baseAlpha: Math.random() * 0.35 + 0.2
+    });
+  }
+
+  function render() {
+    ctx.clearRect(0, 0, width, height);
+
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 110) {
+          const alpha = (1 - dist / 110) * 0.15;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = `rgba(56, 189, 248, ${alpha})`;
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+
+    particles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+
+      if (p.x < 0) p.x = width;
+      if (p.x > width) p.x = 0;
+      if (p.y < 0) p.y = height;
+      if (p.y > height) p.y = 0;
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${p.color}, ${p.baseAlpha})`;
+      ctx.shadowColor = `rgba(${p.color}, 0.8)`;
+      ctx.shadowBlur = 6;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    });
+
+    requestAnimationFrame(render);
+  }
+
+  render();
+}
+
+// -------------------------------------------------------------
+// Boot Setup
+// -------------------------------------------------------------
+document.addEventListener('DOMContentLoaded', () => {
+  initParticleCanvas();
+  changeLanguage(currentLanguage);
+  selectRole('doctor');
+});
+</script>
+</body>
+</html>

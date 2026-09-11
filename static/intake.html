@@ -1,0 +1,3233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Starbucks — Conversational AI Clinical History &amp; OPD Triage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #0D9488;
+    --primary-dark: #0F766E;
+    --primary-light: #F0FDFA;
+    --primary-border: #99F6E4;
+    --accent: #0284C7;
+    --accent-light: #E0F2FE;
+    --surface: #FFFFFF;
+    --surface-alt: #F8FAFC;
+    --surface-translucent: rgba(255, 255, 255, 0.88);
+    --bg: #0F172A;
+    --ink: #0F172A;
+    --ink-light: #334155;
+    --muted: #64748B;
+    --line: #E2E8F0;
+    --danger: #EF4444;
+    --danger-bg: #FEF2F2;
+    --warning: #F59E0B;
+    --warning-bg: #FFFBEB;
+    --success: #10B981;
+    --success-bg: #ECFDF5;
+    --abha-blue: #1E40AF;
+    --abha-soft: rgba(30, 64, 175, 0.08);
+    --ayush-gold: #B45309;
+    --ayush-soft: rgba(180, 83, 9, 0.08);
+    --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
+    --shadow-lg: 0 16px 36px -4px rgba(15, 23, 42, 0.12), 0 8px 16px -6px rgba(15, 23, 42, 0.06);
+    --radius: 20px;
+  }
+
+  body.large-text { font-size: 17px; }
+  body.large-text .chat-bubble { font-size: 16.5px; }
+  body.large-text .chip { font-size: 15.5px; padding: 10px 18px; }
+  body.large-text input, body.large-text textarea { font-size: 16px; }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    margin: 0;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #0B1120;
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Real-Time Floating Particle Background Canvas */
+  #particleCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* Vibrant Glowing Ambient Orbs */
+  .ambient-orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(100px);
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.35;
+    animation: floatOrb 18s infinite alternate ease-in-out;
+  }
+  .ambient-orb-1 {
+    width: 480px;
+    height: 480px;
+    background: radial-gradient(circle, #0D9488 0%, rgba(13,148,136,0) 70%);
+    top: -100px;
+    left: -100px;
+  }
+  .ambient-orb-2 {
+    width: 520px;
+    height: 520px;
+    background: radial-gradient(circle, #0284C7 0%, rgba(2,132,199,0) 70%);
+    bottom: -120px;
+    right: -100px;
+    animation-duration: 22s;
+  }
+  .ambient-orb-3 {
+    width: 380px;
+    height: 380px;
+    background: radial-gradient(circle, #6366F1 0%, rgba(99,102,241,0) 70%);
+    top: 40%;
+    left: 55%;
+    animation-duration: 26s;
+  }
+
+  @keyframes floatOrb {
+    0% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(60px, 40px) scale(1.1); }
+    100% { transform: translate(-40px, 60px) scale(0.95); }
+  }
+
+  /* Kiosk Header */
+  .kiosk-header {
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 14px 28px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+
+  .brand-group {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .brand-logo {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--primary) 0%, #0284C7 100%);
+    color: white;
+    font-weight: 800;
+    font-size: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.4);
+    position: relative;
+  }
+
+  .brand-logo::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #14B8A6, #38BDF8);
+    z-index: -1;
+    opacity: 0.6;
+  }
+
+  .brand-title {
+    font-size: 19px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin: 0;
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .live-pulse-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(16, 185, 129, 0.15);
+    color: #34D399;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .pulse-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #10B981;
+    box-shadow: 0 0 8px #10B981;
+    animation: pulseBeacon 1.5s infinite;
+  }
+
+  @keyframes pulseBeacon {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(1.4); }
+  }
+
+  .brand-sub {
+    font-size: 11px;
+    color: #94A3B8;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: 0.04em;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .kiosk-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(30, 64, 175, 0.2);
+    color: #93C5FD;
+    border: 1px solid rgba(147, 197, 253, 0.3);
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .accessibility-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    padding: 7px 12px;
+    cursor: pointer;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #F8FAFC;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+  }
+  .accessibility-btn:hover { background: rgba(255, 255, 255, 0.18); border-color: rgba(255,255,255,0.3); }
+
+  .lang-select {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    padding: 8px 32px 8px 12px;
+    font-size: 13px;
+    font-weight: 700;
+    background: rgba(30, 41, 59, 0.9) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2314B8A6'/%3E%3C/svg%3E") no-repeat right 12px center;
+    appearance: none;
+    cursor: pointer;
+    color: #FFFFFF;
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* Global Live Audio / Wave Bar */
+  .audio-wave-bar {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(135deg, #0F172A, #1E293B);
+    color: #38BDF8;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+    animation: fadeIn 0.2s ease;
+  }
+  .audio-wave-bar.active { display: inline-flex; }
+
+  .bars-container {
+    display: flex;
+    align-items: flex-end;
+    gap: 2.5px;
+    height: 14px;
+  }
+  .bar {
+    width: 3px;
+    background: #38BDF8;
+    border-radius: 1px;
+    animation: dance 0.6s infinite ease-in-out alternate;
+  }
+  .bar:nth-child(1) { height: 6px; animation-delay: 0.1s; }
+  .bar:nth-child(2) { height: 12px; animation-delay: 0.25s; }
+  .bar:nth-child(3) { height: 16px; animation-delay: 0.4s; }
+  .bar:nth-child(4) { height: 10px; animation-delay: 0.15s; }
+  .bar:nth-child(5) { height: 8px; animation-delay: 0.3s; }
+
+  @keyframes dance {
+    0% { height: 4px; }
+    100% { height: 14px; }
+  }
+
+  /* Main Shell - 3-Column Split Room Layout */
+  .consult-layout {
+    position: relative;
+    z-index: 10;
+    max-width: 1680px;
+    margin: 16px auto 30px;
+    padding: 0 20px;
+    display: grid;
+    grid-template-columns: 1.15fr 350px 365px;
+    gap: 18px;
+    height: calc(100vh - 95px);
+  }
+
+  @media (max-width: 1440px) {
+    .consult-layout {
+      grid-template-columns: 1.1fr 340px 330px;
+      gap: 14px;
+    }
+  }
+
+  @media (max-width: 1120px) {
+    .consult-layout {
+      grid-template-columns: 1fr 360px;
+    }
+    .records-sidebar { display: none; }
+  }
+
+  @media (max-width: 860px) {
+    .consult-layout {
+      grid-template-columns: 1fr;
+      height: auto;
+      margin-bottom: 80px;
+    }
+    .telemetry-sidebar { display: none; }
+    .records-sidebar { display: none; }
+  }
+
+  /* Left Column: Doctor Consultation Chat Suite */
+  .chat-suite {
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .chat-suite-header {
+    background: linear-gradient(135deg, rgba(248,250,252,0.95), rgba(241,245,249,0.95));
+    border-bottom: 1px solid var(--line);
+    padding: 14px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .doctor-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .doctor-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #0D9488 0%, #0284C7 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    box-shadow: 0 4px 10px rgba(13, 148, 136, 0.25);
+    position: relative;
+  }
+
+  .online-indicator {
+    width: 12px;
+    height: 12px;
+    background: #10B981;
+    border: 2px solid white;
+    border-radius: 50%;
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+  }
+
+  .doctor-name {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--ink);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .doctor-role {
+    font-size: 11.5px;
+    color: var(--muted);
+    font-weight: 600;
+    margin: 0;
+  }
+
+  /* Chat Message Stream */
+  .chat-stream {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    scroll-behavior: smooth;
+  }
+
+  .message-row {
+    display: flex;
+    gap: 12px;
+    max-width: 88%;
+    animation: messagePop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes messagePop {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .message-row.doctor { align-self: flex-start; }
+  .message-row.patient { align-self: flex-end; flex-direction: row-reverse; }
+
+  .row-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+    margin-top: 4px;
+  }
+  .row-avatar.doc { background: #CCFBF1; color: #0F766E; }
+  .row-avatar.pat { background: #E0F2FE; color: #0369A1; }
+
+  .bubble-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .chat-bubble {
+    padding: 13px 18px;
+    border-radius: 16px;
+    font-size: 14.5px;
+    line-height: 1.55;
+    position: relative;
+    word-break: break-word;
+  }
+
+  .message-row.doctor .chat-bubble {
+    background: #F8FAFC;
+    color: var(--ink);
+    border: 1px solid #E2E8F0;
+    border-top-left-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  }
+
+  .message-row.patient .chat-bubble {
+    background: linear-gradient(135deg, #0D9488 0%, #0F766E 100%);
+    color: white;
+    border-top-right-radius: 4px;
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
+  }
+
+  .bubble-audio-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px 6px;
+    border-radius: 6px;
+    color: var(--muted);
+    transition: all 0.15s ease;
+    align-self: flex-start;
+  }
+  .bubble-audio-btn:hover { background: #E2E8F0; color: var(--ink); }
+
+  /* Suggestion Chips Under Question */
+  .chips-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .chip {
+    background: #FFFFFF;
+    border: 1.5px solid var(--line);
+    border-radius: 999px;
+    padding: 8px 15px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-light);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .chip:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    transform: translateY(-1.5px);
+    box-shadow: 0 4px 8px rgba(13, 148, 136, 0.15);
+  }
+
+  /* Inline Interactive Cards in Chat */
+  .inline-card {
+    background: #FFFFFF;
+    border: 1.5px solid var(--primary-border);
+    border-radius: 14px;
+    padding: 16px 18px;
+    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.08);
+    margin: 8px 0;
+  }
+
+  /* Inappropriate / Gibberish Input Warning Toast */
+  .validation-toast {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    background: #FFFBEB;
+    border: 1.5px solid #FCD34D;
+    color: #92400E;
+    padding: 10px 16px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    margin: 0 20px 8px;
+    animation: shake 0.35s ease;
+  }
+  .validation-toast.visible { display: flex; }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-6px); }
+    40%, 80% { transform: translateX(6px); }
+  }
+
+  /* Emergency Red Flag Floating Banner */
+  .emergency-alert-banner {
+    display: none;
+    background: linear-gradient(135deg, #DC2626, #B91C1C);
+    color: white;
+    padding: 12px 18px;
+    border-radius: 12px;
+    margin: 0 20px 10px;
+    box-shadow: 0 6px 16px rgba(220, 38, 38, 0.3);
+    animation: pulseRed 2s infinite;
+  }
+  .emergency-alert-banner.visible { display: flex; align-items: center; gap: 12px; }
+
+  @keyframes pulseRed {
+    0%, 100% { box-shadow: 0 6px 16px rgba(220, 38, 38, 0.3); }
+    50% { box-shadow: 0 6px 26px rgba(220, 38, 38, 0.6); }
+  }
+
+  /* Chat Input Bar */
+  .chat-input-bar {
+    border-top: 1px solid var(--line);
+    padding: 14px 20px;
+    background: #FFFFFF;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .input-box-wrapper {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .chat-textarea {
+    width: 100%;
+    border: 1.5px solid var(--line);
+    border-radius: 14px;
+    padding: 12px 48px 12px 16px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--ink);
+    outline: none;
+    resize: none;
+    min-height: 48px;
+    max-height: 120px;
+    line-height: 1.4;
+    transition: all 0.2s ease;
+    background: var(--surface-alt);
+  }
+  .chat-textarea:focus {
+    border-color: var(--primary);
+    background: #FFFFFF;
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+  }
+
+  .mic-button {
+    position: absolute;
+    right: 10px;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+  }
+  .mic-button:hover { background: #E2E8F0; color: var(--ink); }
+  .mic-button.listening {
+    background: var(--danger);
+    color: white;
+    animation: micPulse 1.2s infinite;
+  }
+
+  @keyframes micPulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+    50% { transform: scale(1.08); box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+  }
+
+  .send-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--primary) 0%, #0F766E 100%);
+    border: none;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+  }
+  .send-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(13, 148, 136, 0.4); }
+  .send-btn:active { transform: translateY(1px); }
+
+  /* Right Column: Live Clinical Telemetry & Case Notes */
+  .telemetry-sidebar {
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    overflow-y: auto;
+  }
+
+  .sidebar-header {
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 12px;
+  }
+  .sidebar-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--ink);
+    margin: 0 0 4px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .sidebar-sub {
+    font-size: 11.5px;
+    color: var(--muted);
+    font-weight: 600;
+    margin: 0;
+  }
+
+  /* Completeness Progress Bar */
+  .progress-card {
+    background: var(--surface-alt);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 12px 16px;
+  }
+  .progress-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .progress-bar-bg {
+    width: 100%;
+    height: 8px;
+    background: #E2E8F0;
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #0D9488, #0284C7);
+    border-radius: 999px;
+    width: 25%;
+    transition: width 0.4s ease;
+  }
+
+  /* Telemetry Item Blocks */
+  .telemetry-block {
+    background: var(--surface-alt);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 14px;
+  }
+  .telemetry-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .telemetry-val {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  /* Triage Priority Badge */
+  .triage-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+  .triage-badge.routine { background: #ECFDF5; color: #059669; border: 1px solid #A7F3D0; }
+  .triage-badge.priority { background: #FFFBEB; color: #D97706; border: 1px solid #FDE68A; }
+  .triage-badge.emergency { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; animation: pulseRed 2s infinite; }
+
+  /* Document Upload Dropzone */
+  .drop-zone {
+    border: 2px dashed #99F6E4;
+    background: #F0FDFA;
+    border-radius: 14px;
+    padding: 18px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .drop-zone:hover { border-color: var(--primary); background: #CCFBF1; }
+
+  /* Third Column (Marked Space): Prior Health Records & ABDM Vault */
+  .records-sidebar {
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    overflow-y: auto;
+    position: relative;
+  }
+
+  .records-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #E0F2FE;
+    color: #0284C7;
+    border: 1px solid #BAE6FD;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .record-card {
+    background: #FFFFFF;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: fadeInCard 0.3s ease;
+  }
+  .record-card:hover {
+    border-color: var(--primary);
+    box-shadow: 0 6px 16px rgba(13, 148, 136, 0.12);
+    transform: translateY(-1.5px);
+  }
+
+  @keyframes fadeInCard {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .record-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .record-type-badge {
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 3px 7px;
+    border-radius: 6px;
+  }
+  .record-type-badge.lab_report {
+    background: #FEF3C7;
+    color: #D97706;
+    border: 1px solid #FDE68A;
+  }
+  .record-type-badge.prescription {
+    background: #E0F2FE;
+    color: #0284C7;
+    border: 1px solid #BAE6FD;
+  }
+  .record-type-badge.consultation {
+    background: #ECFDF5;
+    color: #059669;
+    border: 1px solid #A7F3D0;
+  }
+
+  .record-date {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+  }
+
+  .record-file-title {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--ink);
+    word-break: break-all;
+    line-height: 1.35;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .tag-pill-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 2px;
+  }
+  .tag-pill {
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 6px;
+  }
+  .tag-pill.diagnosis {
+    background: #FEE2E2;
+    color: #DC2626;
+    border: 1px solid #FECACA;
+  }
+  .tag-pill.medication {
+    background: #E0E7FF;
+    color: #4338CA;
+    border: 1px solid #C7D2FE;
+  }
+  .tag-pill.investigation {
+    background: #FEF3C7;
+    color: #B45309;
+    border: 1px solid #FDE68A;
+  }
+
+  .record-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .btn-autofill {
+    flex: 1;
+    font-size: 11.5px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #0D9488 0%, #0F766E 100%);
+    color: white;
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    transition: all 0.15s ease;
+  }
+  .btn-autofill:hover {
+    box-shadow: 0 3px 8px rgba(13, 148, 136, 0.3);
+    transform: translateY(-1px);
+  }
+  .btn-autofill.applied {
+    background: #10B981;
+    cursor: default;
+    box-shadow: none;
+    transform: none;
+  }
+
+  .btn-view-doc {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--primary);
+    background: #F0FDFA;
+    border: 1px solid #CCFBF1;
+    padding: 6px 10px;
+    border-radius: 8px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: all 0.15s ease;
+  }
+  .btn-view-doc:hover {
+    background: #CCFBF1;
+    color: #0F766E;
+  }
+
+  .empty-records-box {
+    text-align: center;
+    padding: 24px 14px;
+    border: 2px dashed #CBD5E1;
+    border-radius: 14px;
+    background: #F8FAFC;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .empty-records-icon {
+    font-size: 32px;
+    margin-bottom: 2px;
+  }
+  .empty-records-title {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .empty-records-desc {
+    font-size: 11.5px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  .upload-record-btn {
+    width: 100%;
+    padding: 9px 12px;
+    border-radius: 10px;
+    border: 1.5px dashed var(--primary);
+    background: #F0FDFA;
+    color: var(--primary-dark);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+  }
+  .upload-record-btn:hover {
+    background: #CCFBF1;
+    border-color: #0F766E;
+  }
+
+  /* Unified Expandable Encounter Record Cards */
+  .encounter-record-card {
+    background: #FFFFFF;
+    border: 1.5px solid var(--line);
+    border-radius: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    overflow: hidden;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: fadeInCard 0.3s ease;
+  }
+  .encounter-record-card:hover {
+    border-color: var(--primary);
+    box-shadow: 0 6px 18px rgba(13, 148, 136, 0.12);
+  }
+  .encounter-record-card.expanded {
+    border-color: var(--primary);
+    box-shadow: 0 8px 24px rgba(13, 148, 136, 0.16);
+  }
+
+  .encounter-header {
+    padding: 13px 15px;
+    cursor: pointer;
+    background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+    user-select: none;
+    transition: background 0.15s ease;
+  }
+  .encounter-header:hover {
+    background: #F1F5F9;
+  }
+
+  .encounter-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .encounter-chevron {
+    font-size: 11px;
+    color: var(--muted);
+    transition: transform 0.25s ease;
+  }
+  .encounter-record-card.expanded .encounter-chevron {
+    transform: rotate(180deg);
+    color: var(--primary);
+  }
+
+  .encounter-complaint-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.35;
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  .encounter-meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .encounter-badge-lab {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10.5px;
+    font-weight: 700;
+    background: #FEF3C7;
+    color: #B45309;
+    border: 1px solid #FDE68A;
+    padding: 2px 7px;
+    border-radius: 6px;
+  }
+
+  .encounter-expand-hint {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--primary);
+  }
+
+  .encounter-content {
+    border-top: 1px solid var(--line);
+    padding: 14px 15px;
+    background: #FAFAFA;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    animation: fadeInEncounter 0.25s ease;
+  }
+
+  @keyframes fadeInEncounter {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .encounter-section-box {
+    background: #FFFFFF;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 12px;
+  }
+  .encounter-section-box.lab-box {
+    border-color: #BAE6FD;
+    background: linear-gradient(180deg, #F0FDFA 0%, #FFFFFF 100%);
+  }
+
+  .encounter-section-label {
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .encounter-text-item {
+    font-size: 12px;
+    color: var(--ink);
+    line-height: 1.45;
+    margin-bottom: 4px;
+  }
+  .encounter-text-item strong {
+    color: var(--ink-light);
+  }
+
+  .attached-lab-item {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin-top: 6px;
+  }
+  .attached-lab-filename {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--primary-dark);
+    word-break: break-all;
+  }
+
+  .btn {
+    border-radius: 12px;
+    padding: 10px 18px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.15s ease;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary) 0%, #0F766E 100%);
+    color: white;
+    box-shadow: 0 4px 10px rgba(13, 148, 136, 0.25);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 14px rgba(13, 148, 136, 0.35); }
+
+  /* Typing animation dots */
+  .typing-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 16px;
+    background: #F1F5F9;
+    border-radius: 14px;
+    width: fit-content;
+  }
+  .typing-dot {
+    width: 6px;
+    height: 6px;
+    background: #94A3B8;
+    border-radius: 50%;
+    animation: typingBounce 1.4s infinite ease-in-out;
+  }
+  .typing-dot:nth-child(1) { animation-delay: 0s; }
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes typingBounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-6px); }
+  }
+
+  /* Full-Area Registration Success View */
+  .registration-success-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 28px 24px;
+    overflow-y: auto;
+    animation: successFadeIn 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    gap: 20px;
+    background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+    width: 100%;
+    height: 100%;
+    min-height: 520px;
+  }
+
+  @keyframes successFadeIn {
+    from { opacity: 0; transform: scale(0.96) translateY(16px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .celebrate-badge {
+    position: relative;
+    width: 68px;
+    height: 68px;
+    margin: 0 auto 10px;
+  }
+  .success-icon-ring {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    background: #ECFDF5;
+    border: 2px solid #6EE7B7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0.12);
+    animation: pulseRing 2s infinite;
+  }
+  @keyframes pulseRing {
+    0%, 100% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.14); }
+    50% { box-shadow: 0 0 0 14px rgba(16, 185, 129, 0.04); }
+  }
+  .check-svg {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: block;
+    stroke-width: 3.5;
+    stroke: #059669;
+    stroke-miterlimit: 10;
+  }
+  .check-circle {
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    stroke-width: 3;
+    stroke-miterlimit: 10;
+    stroke: #10B981;
+    fill: none;
+    animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+  }
+  .check-check {
+    transform-origin: 50% 50%;
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    animation: stroke 0.35s cubic-bezier(0.65, 0, 0.45, 1) 0.5s forwards;
+  }
+  @keyframes stroke { 100% { stroke-dashoffset: 0; } }
+
+  .success-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--ink);
+    margin: 0 0 6px;
+    text-align: center;
+    letter-spacing: -0.02em;
+  }
+  .success-subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    text-align: center;
+    margin: 0 auto;
+    max-width: 480px;
+    line-height: 1.45;
+  }
+
+  /* Digital Token Pass Card */
+  .token-pass-card {
+    width: 100%;
+    max-width: 540px;
+    background: #FFFFFF;
+    border: 1.5px solid var(--primary-border);
+    border-radius: 18px;
+    box-shadow: 0 12px 30px -6px rgba(13, 148, 136, 0.15), 0 4px 12px rgba(0,0,0,0.04);
+    overflow: hidden;
+    position: relative;
+  }
+  .token-top-strip {
+    background: linear-gradient(135deg, #0D9488 0%, #0F766E 100%);
+    color: white;
+    padding: 18px 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .token-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    opacity: 0.85;
+    text-transform: uppercase;
+  }
+  .token-number {
+    font-size: 28px;
+    font-weight: 800;
+    font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: 0.02em;
+    margin-top: 2px;
+  }
+  .token-badge-wrap {
+    text-align: right;
+  }
+  .triage-badge-large {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    background: white;
+    color: #0F766E;
+  }
+  .triage-badge-large.emergency {
+    background: #FEE2E2;
+    color: #DC2626;
+    animation: pulseRed 1.8s infinite;
+  }
+  .token-substatus {
+    display: block;
+    font-size: 11px;
+    margin-top: 4px;
+    opacity: 0.9;
+  }
+
+  .token-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 16px;
+    padding: 20px 22px;
+    background: #FFFFFF;
+  }
+  .token-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .token-cell.span-2 { grid-column: span 2; }
+  .cell-label {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .cell-value {
+    font-size: 14px;
+    color: var(--ink);
+  }
+  .cell-value.font-mono {
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .cell-value-complaint {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    background: var(--surface-alt);
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+  }
+  .badge-mini-verified {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 10px;
+    font-weight: 700;
+    background: #E0F2FE;
+    color: #0284C7;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-top: 3px;
+    width: fit-content;
+  }
+
+  .token-footer-info {
+    border-top: 1px dashed var(--line);
+    padding: 12px 22px;
+    background: var(--surface-alt);
+    font-size: 11.5px;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .success-actions-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+    max-width: 540px;
+  }
+  .btn-secondary {
+    background: #FFFFFF;
+    color: var(--ink);
+    border: 1.5px solid var(--line);
+  }
+  .btn-secondary:hover { background: #F1F5F9; border-color: #CBD5E1; }
+  .btn-outline {
+    background: transparent;
+    color: var(--muted);
+    border: 1.5px solid var(--line);
+  }
+  .btn-outline:hover { background: #FFFFFF; color: var(--ink); border-color: var(--primary); }
+</style>
+</head>
+<body>
+
+<!-- Real-time Animated Particle Background -->
+<canvas id="particleCanvas"></canvas>
+<div class="ambient-orb ambient-orb-1"></div>
+<div class="ambient-orb ambient-orb-2"></div>
+<div class="ambient-orb ambient-orb-3"></div>
+
+<!-- Top Kiosk Header -->
+<header class="kiosk-header">
+  <div class="brand-group">
+    <div class="brand-logo">🩺</div>
+    <div>
+      <h1 class="brand-title">
+        Starbucks
+        <span class="live-pulse-badge"><span class="pulse-dot"></span> Live OPD Intake</span>
+      </h1>
+      <p class="brand-sub" data-i18n="headerSubtitle">Conversational AI Clinical History &amp; Triage Suite</p>
+    </div>
+  </div>
+
+  <div class="header-actions">
+    <div class="audio-wave-bar" id="audioWaveBar" onclick="stopAllAudioAndMic()" ondblclick="stopAllAudioAndMic()" title="Tap or Double-click to stop audio">
+      <div class="bars-container">
+        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+      </div>
+      <span id="audioWaveStatus">Speaking [⏹️ Stop]</span>
+    </div>
+
+    <span class="kiosk-badge" id="abhaBadge">ABHA: Verified</span>
+
+    <button class="accessibility-btn" onclick="toggleTextSize()" title="Toggle High-Contrast / Larger Font Size">
+      <span>A+ / A-</span>
+    </button>
+
+    <a href="/" class="accessibility-btn" style="text-decoration:none; font-size:12px; font-weight:700; color:white;" title="Return to Portal Gateway">
+      <span>🚪 Login</span>
+    </a>
+
+    <select class="lang-select" id="langSelect" onchange="changeLanguage(this.value)">
+      <option value="en">English</option>
+      <option value="hi">हिंदी (Hindi)</option>
+      <option value="bn">বাংলা (Bengali)</option>
+      <option value="mr">मराठी (Marathi)</option>
+      <option value="ta">தமிழ் (Tamil)</option>
+      <option value="te">తెలుగు (Telugu)</option>
+      <option value="kn">ಕನ್ನಡ (Kannada)</option>
+      <option value="ml">മലയാളം (Malayalam)</option>
+      <option value="gu">ગુજરાતી (Gujarati)</option>
+    </select>
+  </div>
+</header>
+
+<!-- Main Split Room Layout -->
+<main class="consult-layout">
+
+  <!-- Left: AI Doctor Consultation Chat Suite -->
+  <section class="chat-suite">
+    <!-- Doctor Header Bar -->
+    <div class="chat-suite-header">
+      <div class="doctor-profile">
+        <div class="doctor-avatar">
+          🩺
+          <div class="online-indicator"></div>
+        </div>
+        <div>
+          <h2 class="doctor-name">
+            Dr. Starbucks
+            <span style="font-size:11px; background:#CCFBF1; color:#0F766E; padding:2px 6px; border-radius:6px;">AI Registrar</span>
+          </h2>
+          <p class="doctor-role" data-i18n="docStatus">Online · Pre-Consultation OPD Clinical Intake</p>
+        </div>
+      </div>
+
+      <button class="accessibility-btn" style="color:var(--ink); font-size:11px; background:var(--surface); border-color:var(--line);" onclick="playWelcomePrompt()" ondblclick="stopAllAudioAndMic()">
+        🔊 <span data-i18n="listenVoiceGuide">Listen to Guide</span>
+      </button>
+    </div>
+
+    <!-- Emergency Triage Banner (Appears dynamically if red flags detected) -->
+    <div class="emergency-alert-banner" id="emergencyBanner">
+      <span style="font-size:24px;">🚨</span>
+      <div>
+        <strong style="font-size:13.5px;" data-i18n="emergencyAlertTitle">EMERGENCY RED-FLAG TRIAGE ALERT</strong>
+        <div style="font-size:12px; opacity:0.9;" id="emergencyAlertDesc">Symptoms match acute cardiac/respiratory distress. Case prioritized for immediate physician consultation.</div>
+      </div>
+    </div>
+
+    <!-- Dedicated Full-Area Registration Success View (Hidden initially, fills entire chat area on submit) -->
+    <div id="registrationSuccessView" class="registration-success-container" style="display:none;">
+      <div class="success-header">
+        <div class="celebrate-badge">
+          <div class="success-icon-ring">
+            <svg class="check-svg" viewBox="0 0 52 52">
+              <circle class="check-circle" cx="26" cy="26" r="25" fill="none"/>
+              <path class="check-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+            </svg>
+          </div>
+        </div>
+        <h2 class="success-title">🎉 OPD Case Registered Successfully!</h2>
+        <p class="success-subtitle">Case successfully pushed to Hospital HIS, Live Triage Queue &amp; ABHA Electronic Health Record.</p>
+      </div>
+
+      <!-- Digital Boarding Pass / Token Slip Card -->
+      <div class="token-pass-card" id="printablePassCard">
+        <div class="token-top-strip">
+          <div>
+            <span class="token-label">OPD QUEUE TOKEN NUMBER</span>
+            <div class="token-number" id="successTokenNo">#OPD-P3331</div>
+          </div>
+          <div class="token-badge-wrap">
+            <span class="triage-badge-large routine" id="successTriageBadge">ROUTINE OPD</span>
+            <span class="token-substatus">Queue Position: Priority 1</span>
+          </div>
+        </div>
+
+        <div class="token-grid">
+          <div class="token-cell">
+            <span class="cell-label">PATIENT FULL NAME</span>
+            <strong class="cell-value" id="successPatientName">Ramesh Kumar</strong>
+          </div>
+          <div class="token-cell">
+            <span class="cell-label">PATIENT ID</span>
+            <strong class="cell-value font-mono" id="successPatientId">P3331</strong>
+          </div>
+          <div class="token-cell">
+            <span class="cell-label">14-DIGIT ABHA ID</span>
+            <strong class="cell-value font-mono" id="successAbhaId">14-8291-0394-8192</strong>
+            <span class="badge-mini-verified">🛡️ ABDM Linked</span>
+          </div>
+          <div class="token-cell">
+            <span class="cell-label">ABDM ABHA ADDRESS</span>
+            <strong class="cell-value font-mono" id="successAbhaAddress">ramesh.kumar@abdm</strong>
+          </div>
+          <div class="token-cell span-2">
+            <span class="cell-label">ASSIGNED OPD CHAMBER &amp; DOCTOR</span>
+            <strong class="cell-value" style="color:var(--primary-dark);" id="successChamber">
+              Chamber 4 · Dr. S. Mehta (General Medicine &amp; Clinical Triage)
+            </strong>
+          </div>
+          <div class="token-cell span-2">
+            <span class="cell-label">PRIMARY CHIEF COMPLAINT RECORDED</span>
+            <div class="cell-value-complaint" id="successComplaint">Cold, cough and runny nose</div>
+          </div>
+        </div>
+
+        <div class="token-footer-info">
+          <div>
+            <span>🕒 <strong>Check-in Time:</strong> <span id="successTimestamp">Now</span></span>
+            <span style="margin-left:14px;">🔒 <strong>DPDP Act 2023:</strong> Consent Recorded &amp; Hashed</span>
+          </div>
+          <div>
+            <span>📄 <strong>FHIR R4 Bundle:</strong> Generated</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Controls -->
+      <div class="success-actions-row">
+        <button type="button" class="btn btn-secondary" onclick="printTokenPass()">
+          🖨️ Print Token Slip / Save Pass
+        </button>
+        <a href="/doctor" class="btn btn-primary" style="text-decoration:none;">
+          🩺 View in Doctor Clinical Station →
+        </a>
+        <button type="button" class="btn btn-outline" onclick="resetKioskForNextPatient()">
+          🔄 Start Next Patient Intake (Wipe Kiosk)
+        </button>
+      </div>
+    </div>
+
+    <!-- Message Stream -->
+    <div class="chat-stream" id="chatStream">
+      <!-- Injected dynamically via JS -->
+    </div>
+
+    <!-- Inappropriate / Non-medical Input Validation Toast -->
+    <div class="validation-toast" id="validationToast">
+      <span>⚠️</span>
+      <span id="validationToastMsg">Please enter a valid physical health problem or discomfort so the doctor can assist you.</span>
+    </div>
+
+    <!-- Interactive Chat Input Bar -->
+    <div class="chat-input-bar">
+      <div class="input-box-wrapper">
+        <textarea
+          class="chat-textarea"
+          id="chatInput"
+          rows="1"
+          placeholder="Speak or type your health problem (e.g. I have severe cold and cough)..."
+          data-placeholder="chatPlaceholder"
+          onkeydown="handleInputKeydown(event)"
+        ></textarea>
+        <button
+          class="mic-button"
+          id="micBtn"
+          onclick="toggleMicInput()"
+          ondblclick="stopAllAudioAndMic()"
+          title="Tap to Speak · Double-click to Stop"
+        >🎙️</button>
+      </div>
+
+      <button class="send-btn" id="sendBtn" onclick="sendUserMessage()" title="Send Message">
+        ➤
+      </button>
+    </div>
+  </section>
+
+  <!-- Right: Live Doctor's Case Telemetry & Clinical Chart -->
+  <aside class="telemetry-sidebar">
+    <div class="sidebar-header">
+      <h3 class="sidebar-title">
+        <span>📋 Clinical Telemetry</span>
+        <span class="triage-badge routine" id="triageBadge">Routine OPD</span>
+      </h3>
+      <p class="sidebar-sub">Live synthesized case record for physician review</p>
+    </div>
+
+    <!-- Progress Meter -->
+    <div class="progress-card">
+      <div class="progress-labels">
+        <span data-i18n="completenessLabel">History Completeness</span>
+        <span id="completenessPercent">25%</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="completenessFill"></div>
+      </div>
+    </div>
+
+    <!-- Patient Identification -->
+    <div class="telemetry-block">
+      <div class="telemetry-label">
+        <span data-i18n="lblPatient">PATIENT DETAILS</span>
+        <span style="color:var(--primary);">Verified</span>
+      </div>
+      <div class="telemetry-val" id="telemetryPatient">Ramesh Kumar · 42y / Male</div>
+      <div style="font-size:11.5px; color:var(--muted); font-family:'IBM Plex Mono',monospace;" id="telemetryAbha">ABHA: 14-8291-0394-8192</div>
+    </div>
+
+    <!-- Primary Chief Complaint -->
+    <div class="telemetry-block">
+      <div class="telemetry-label" data-i18n="lblChiefComplaint">PRIMARY COMPLAINT</div>
+      <div class="telemetry-val" id="telemetryComplaint" style="color:var(--primary-dark);">Awaiting input…</div>
+    </div>
+
+    <!-- SOCRATES Probed Dimensions -->
+    <div class="telemetry-block">
+      <div class="telemetry-label" data-i18n="lblSocrates">SOCRATES CLINICAL DIMENSIONS</div>
+      <div style="font-size:12px; color:var(--ink-light); line-height:1.4;" id="telemetrySocrates">
+        <div>• <strong>Onset:</strong> <span id="telOnset">—</span></div>
+        <div>• <strong>Character:</strong> <span id="telChar">—</span></div>
+        <div>• <strong>Associated:</strong> <span id="telAssoc">—</span></div>
+      </div>
+    </div>
+
+    <!-- Medications & Allergies -->
+    <div class="telemetry-block">
+      <div class="telemetry-label" data-i18n="lblMedsAllergies">MEDS &amp; ALLERGIES</div>
+      <div style="font-size:12px; color:var(--ink-light);" id="telemetryMeds">
+        <div>• <strong>Current Rx:</strong> <span id="telMeds">None reported</span></div>
+        <div>• <strong>Allergies:</strong> <span id="telAllergies" style="color:var(--danger);">None</span></div>
+      </div>
+    </div>
+
+    <!-- AYUSH Dashavidha Pariksha -->
+    <div class="telemetry-block">
+      <div class="telemetry-label" style="color:var(--ayush-gold);" data-i18n="lblAyush">AYUSH DOSHA CORRELATION</div>
+      <div style="font-size:12px; color:var(--ink-light);" id="telemetryAyush">
+        <div>• <strong>Prakriti:</strong> <span id="telPrakriti">Kapha-Vata</span></div>
+        <div>• <strong>Agni:</strong> <span id="telAgni">Manda Agni</span></div>
+      </div>
+    </div>
+
+    <!-- Final Submission Shortcut -->
+    <button class="btn btn-primary" id="btnSidebarSubmit" style="width:100%; margin-top:auto;" onclick="proceedToCaseReview()">
+      <span>📋 Review &amp; Route to Doctor</span> →
+    </button>
+  </aside>
+
+  <!-- Third Column: Prior Health Records & ABDM Vault (Marked Area) -->
+  <aside class="records-sidebar" id="recordsSidebar">
+    <div class="sidebar-header">
+      <h3 class="sidebar-title">
+        <span data-i18n="lblPriorRecords">📁 Prior Medical Records</span>
+        <span class="records-badge">
+          <span class="pulse-dot" style="background:#0284C7; box-shadow:0 0 6px #0284C7;"></span>
+          ABDM Vault
+        </span>
+      </h3>
+      <p class="sidebar-sub" data-i18n="lblPriorRecordsSub">Digitized lab reports, past Rx &amp; OPD history</p>
+    </div>
+
+    <!-- Linked Patient / ABHA Locker Card -->
+    <div class="telemetry-block" style="background: linear-gradient(135deg, #F0FDFA 0%, #E0F2FE 100%); border-color: #BAE6FD;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+        <span style="font-size:10.5px; font-weight:800; color:#0369A1; text-transform:uppercase; letter-spacing:0.05em;" data-i18n="lblAbhaLocker">ABDM HEALTH LOCKER</span>
+        <span style="font-size:10px; font-weight:700; background:#0284C7; color:white; padding:1px 6px; border-radius:4px;">SYNCED</span>
+      </div>
+      <div style="font-size:13px; font-weight:700; color:#0F172A;" id="priorRecordsPatientName">Loading Patient…</div>
+      <div style="font-size:11px; color:#0284C7; font-family:'IBM Plex Mono',monospace; margin-top:2px;" id="priorRecordsAbhaId">ABHA: Loading…</div>
+    </div>
+
+    <!-- Quick Actions: Scan/Upload past record & Refresh -->
+    <div style="display:flex; gap:8px;">
+      <button class="upload-record-btn" onclick="triggerPriorDocUpload()" title="Upload &amp; Digitize Prescription or Lab Report with AI OCR">
+        <span>📤 <span data-i18n="btnScanPastDoc">Scan &amp; Digitize Past Report</span></span>
+      </button>
+      <button class="accessibility-btn" style="color:var(--ink); background:white; border-color:var(--line); padding:0 10px;" onclick="loadPatientPriorRecords()" title="Refresh records from database">
+        🔄
+      </button>
+    </div>
+    <input type="file" id="priorDocFileInput" accept=".pdf,.png,.jpg,.jpeg" style="display:none;" onchange="handlePriorDocUpload(event)" />
+
+    <!-- Prior Records List Container -->
+    <div id="priorRecordsList" style="display:flex; flex-direction:column; gap:10px; flex:1;">
+      <!-- Populated dynamically by loadPatientPriorRecords() -->
+      <div class="typing-indicator" style="align-self:center; margin-top:20px;">
+        <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+      </div>
+    </div>
+  </aside>
+
+</main>
+
+<script>
+// -------------------------------------------------------------
+// State Management
+// -------------------------------------------------------------
+let currentLanguage = localStorage.getItem('kiosk_language') || 'hi';
+let patientId = 'P' + Math.floor(1000 + Math.random() * 9000);
+let patientName = 'Ramesh Kumar';
+let abhaId = '14-8291-0394-8192';
+let isAbhaVerified = true;
+let activeUtterance = null;
+let currentSpeechRecognition = null;
+let uploadedDocuments = [];
+
+let consultationState = {
+  stage: "chief_complaint",
+  category: "cold",
+  chief_complaint: "",
+  socrates: {},
+  past_history: "",
+  medications: "",
+  allergies: "",
+  lifestyle: "",
+  prakriti: "Kapha-Vata",
+  agni: "Manda Agni",
+  ahara_vihara: "",
+  triage_level: "routine",
+  red_flag: false,
+  red_flag_reasons: [],
+  completeness_percent: 20
+};
+
+let conversationHistory = [];
+
+// -------------------------------------------------------------
+// Multilingual Translations Dictionary (9 Indian Languages)
+// -------------------------------------------------------------
+const I18N = {
+  en: {
+    headerSubtitle: "Conversational AI Clinical History & Triage Suite",
+    docStatus: "Online · Pre-Consultation OPD Clinical Intake",
+    listenVoiceGuide: "Listen to Guide",
+    emergencyAlertTitle: "EMERGENCY RED-FLAG TRIAGE ALERT",
+    chatPlaceholder: "Speak or type your health problem (e.g. I have severe cold and cough)...",
+    completenessLabel: "History Completeness",
+    lblPatient: "PATIENT DETAILS",
+    lblChiefComplaint: "PRIMARY COMPLAINT",
+    lblSocrates: "SOCRATES CLINICAL DIMENSIONS",
+    lblMedsAllergies: "MEDS & ALLERGIES",
+    lblAyush: "AYUSH DOSHA CORRELATION",
+    initialGreeting: "Namaste and welcome to Starbucks! I am Dr. Starbucks, your AI clinical registrar. Please verify your details below or let me know what primary health problem brings you to the hospital today.",
+    dblClickStop: "Double-click to stop",
+    sendOtpBtn: "Send ABDM OTP",
+    otpReady: "OTP Ready",
+    dpdpConsent: "I grant explicit consent under DPDP Act 2023 to record clinical history and share with hospital doctor.",
+    confirmIdentityBtn: "Confirm Identity & Start Consultation",
+    dropZoneTitle: "Tap or drop previous prescription/report for AI OCR",
+    dropZoneSub: "Supports PDF and mobile photos (.jpg, .png, .pdf)",
+    submitBtn: "Submit Case to Hospital HIS & ABHA Queue",
+    lblPriorRecords: "Prior Medical Records",
+    lblPriorRecordsSub: "Digitized lab reports, past Rx & OPD history",
+    lblAbhaLocker: "ABDM HEALTH LOCKER",
+    btnScanPastDoc: "Scan & Digitize Past Report",
+    btnAutoFill: "Auto-fill to History",
+    lblNoPriorRecords: "No prior medical records found."
+  },
+  hi: {
+    headerSubtitle: "संवादात्मक एआई क्लिनिकल हिस्ट्री व ट्राइएज सूट",
+    docStatus: "ऑनलाइन · परामर्श-पूर्व ओपीडी क्लिनिकल हिस्ट्री",
+    listenVoiceGuide: "ऑडियो गाइड सुनें",
+    emergencyAlertTitle: "आपातकालीन रेड-फ्लैग ट्राइएज अलर्ट",
+    chatPlaceholder: "अपनी बीमारी बोलें या लिखें (उदा. मुझे 2 दिन से सर्दी और तेज़ खांसी है)...",
+    completenessLabel: "इतिहास पूर्णता",
+    lblPatient: "मरीज़ का विवरण",
+    lblChiefComplaint: "मुख्य बीमारी / लक्षण",
+    lblSocrates: "सॉक्रेट्स क्लिनिकल आयाम",
+    lblMedsAllergies: "दवाइयां व एलर्जी",
+    lblAyush: "आयुष प्रकृति व अग्नि",
+    initialGreeting: "नमस्ते और मेडीकियोस्क में आपका स्वागत है! मैं डॉ. मेडीकियोस्क हूँ। कृपया नीचे अपनी आभा आईडी सत्यापित करें और बताएं कि आज आप किस बीमारी या दर्द के लिए अस्पताल आए हैं?",
+    dblClickStop: "रोकने के लिए दो बार क्लिक करें",
+    sendOtpBtn: "ओटीपी भेजें",
+    otpReady: "ओटीपी तैयार",
+    dpdpConsent: "मैं DPDP कानून २०२३ के तहत क्लिनिकल केस दर्ज करने और डॉक्टर से साझा करने की स्पष्ट सहमति देता हूँ।",
+    confirmIdentityBtn: "पहचान की पुष्टि करें और परामर्श शुरू करें",
+    dropZoneTitle: "पुराने पर्चे या रिपोर्ट स्कैन करने के लिए टैप करें",
+    dropZoneSub: "पीडीएफ और मोबाइल कैमरे की तस्वीरें मान्य हैं (.jpg, .png, .pdf)",
+    submitBtn: "केस डॉक्टर व अस्पताल सिस्टम में भेजें",
+    lblPriorRecords: "पुराने मेडिकल रिकॉर्ड",
+    lblPriorRecordsSub: "डिजिटाइज़्ड लैब रिपोर्ट, पुराने पर्चे व ओपीडी इतिहास",
+    lblAbhaLocker: "आभा डिजिटल हेल्थ लॉकर",
+    btnScanPastDoc: "पुराना पर्चा / रिपोर्ट स्कैन करें",
+    btnAutoFill: "हिस्ट्री में जोड़ें",
+    lblNoPriorRecords: "कोई पुराना रिकॉर्ड नहीं मिला।"
+  },
+  bn: {
+    headerSubtitle: "কথোপকথনমূলক এআই ক্লিনিকাল হিস্ট্রি ও ট্রায়াজ",
+    docStatus: "অনলাইন · ওপিডি ক্লিনিকাল ইতিহাস গ্রহণ",
+    listenVoiceGuide: "অডিও গাইড শুনুন",
+    emergencyAlertTitle: "জরুরি রেড-ফ্ল্যাগ ট্রায়াজ সতর্কতা",
+    chatPlaceholder: "আপনার শারীরিক সমস্যা বলুন বা লিখুন...",
+    completenessLabel: "ইতিহাস সম্পূর্ণতা",
+    lblPatient: "রোগীর বিবরণ",
+    lblChiefComplaint: "প্রধান সমস্যা",
+    lblSocrates: "ক্লিনিকাল অনুসন্ধান",
+    lblMedsAllergies: "ওষুধ ও অ্যালার্জি",
+    lblAyush: "আয়ুষ মূল্যায়ন",
+    initialGreeting: "নমস্কার, মেডিকিয়স্কে স্বাগতম! আমি ডঃ মেডিকিয়স্ক। আপনার আভা আইডি নিশ্চিত করুন এবং বলুন আজ আপনি কী সমস্যার জন্য এসেছেন?",
+    dblClickStop: "থামাতে ডাবল ক্লিক করুন",
+    sendOtpBtn: "ওটিপি পাঠান",
+    otpReady: "ওটিপি প্রস্তুত",
+    dpdpConsent: "আমি DPDP আইন ২০২৩ অনুযায়ী ক্লিনিকাল রেকর্ড সংরক্ষণে সম্মতি দিচ্ছি।",
+    confirmIdentityBtn: "পরিচয় নিশ্চিত করুন এবং শুরু করুন",
+    dropZoneTitle: "প্রেসক্রিপশন বা রিপোর্ট স্ক্যান করতে আপলোড করুন",
+    dropZoneSub: "পিডিএফ এবং মোবাইল ছবি গ্রহণযোগ্য",
+    submitBtn: "হাসপাতাল সিস্টেমে জমা দিন",
+    lblPriorRecords: "পূর্ববর্তী মেডিকেল রেকর্ড",
+    lblPriorRecordsSub: "ডিজিটাইজড ল্যাব রিপোর্ট, প্রেসক্রিপশন ও ইতিহাস",
+    lblAbhaLocker: "আভা হেলথ লকার",
+    btnScanPastDoc: "রিপোর্ট স্ক্যান করুন",
+    btnAutoFill: "যুক্ত করুন",
+    lblNoPriorRecords: "কোনো পূর্ববর্তী রেকর্ড পাওয়া যায়নি।"
+  },
+  mr: {
+    headerSubtitle: "संवादात्मक एआई क्लिनिकल हिस्ट्री व ट्रायज",
+    docStatus: "ऑनलाइन · ओपीडी तपासणी पूर्व माहिती",
+    listenVoiceGuide: "ऑडिओ ऐका",
+    emergencyAlertTitle: "तातडीची लक्षणे आढळली — इमर्जन्सी अलर्ट",
+    chatPlaceholder: "आपली तक्रार बोला किंवा टाईप करा...",
+    completenessLabel: "इतिहास पूर्णता",
+    lblPatient: "रुग्णाची माहिती",
+    lblChiefComplaint: "मुख्य तक्रार",
+    lblSocrates: "क्लिनिकल तपशील",
+    lblMedsAllergies: "औषधे व ऍलर्जी",
+    lblAyush: "आयुष प्रकृती",
+    initialGreeting: "नमस्कार, मेडीकियोस्क मध्ये आपले स्वागत आहे! मी डॉ. मेडीकियोस्क आहे. आज आपण कोणत्या त्रासासाठी आला आहात ते सांगा.",
+    dblClickStop: "थांबवण्यासाठी डबल क्लिक करा",
+    sendOtpBtn: "ओटीपी पाठवा",
+    otpReady: "ओटीपी तयार",
+    dpdpConsent: "मी DPDP कायदा २०२३ अंतर्गत क्लिनिकल नोंदीसाठी संमती देतो.",
+    confirmIdentityBtn: "सत्यापित करा आणि सुरू करा",
+    dropZoneTitle: "जुने रिपोर्ट किंवा प्रिस्क्रिप्शन अपलोड करा",
+    dropZoneSub: "पीडीएफ आणि फोटो मान्य आहेत",
+    submitBtn: "रुग्णालय ईएमआर मध्ये पाठवा",
+    lblPriorRecords: "मागील वैद्यकीय नोंदी",
+    lblPriorRecordsSub: "डिजिटलाइझ केलेले रिपोर्ट, प्रिस्क्रिप्शन व इतिहास",
+    lblAbhaLocker: "आभा हेल्थ लॉकर",
+    btnScanPastDoc: "जुना रिपोर्ट स्कॅन करा",
+    btnAutoFill: "इतिहासात जोडा",
+    lblNoPriorRecords: "कोणतीही जुनी नोंद आढळली नाही."
+  },
+  ta: {
+    headerSubtitle: "AI மருத்துவ வரலாற்று உரையாடல் தளம்",
+    docStatus: "ஆன்லைன் · மருத்துவ ஆலோசனை முந்தைய பதிவு",
+    listenVoiceGuide: "வழிகாட்டியை கேட்கவும்",
+    emergencyAlertTitle: "அவசர சிகிச்சை எச்சரிக்கை",
+    chatPlaceholder: "உங்கள் பிரச்சனையை பேசுங்கள் அல்லது தட்டச்சு செய்க...",
+    completenessLabel: "பதிவு நிறைவு",
+    lblPatient: "நோயாளி விவரங்கள்",
+    lblChiefComplaint: "முக்கிய பிரச்சனை",
+    lblSocrates: "மருத்துவ பரிசோதனை",
+    lblMedsAllergies: "மருந்துகள் & ஒவ்வாமை",
+    lblAyush: "ஆயுஷ் உடலமைப்பு",
+    initialGreeting: "வணக்கம், மெடிகியோஸ்கிற்கு நல்வரவு! நான் டாக்டர் மெடிகியோஸ்க். இன்று நீங்கள் என்ன பிரச்சனைக்காக வந்துள்ளீர்கள்?",
+    dblClickStop: "நிறுத்த இரட்டை சொடுக்கவும்",
+    sendOtpBtn: "OTP அனுப்பவும்",
+    otpReady: "OTP தயார்",
+    dpdpConsent: "மருத்துவ வரலாற்று பதிவுக்கு DPDP சட்டம் 2023 இன் கீழ் சம்மதிக்கிறேன்.",
+    confirmIdentityBtn: "உறுதிசெய்து தொடங்கவும்",
+    dropZoneTitle: "மருத்துவ அறிக்கைகளை ஸ்கேன் செய்ய பதிவேற்றவும்",
+    dropZoneSub: "PDF மற்றும் புகைப்படங்கள் ஏற்கப்படும்",
+    submitBtn: "மருத்துவமனைக்கு அனுப்பவும்",
+    lblPriorRecords: "முந்தைய மருத்துவ பதிவுகள்",
+    lblPriorRecordsSub: "ஸ்கேன் செய்யப்பட்ட அறிக்கைகள் மற்றும் முந்தைய வரலாறு",
+    lblAbhaLocker: "ABDM ஹெல்த் லாக்கர்",
+    btnScanPastDoc: "அறிக்கையை ஸ்கேன் செய்க",
+    btnAutoFill: "சேர்க்கவும்",
+    lblNoPriorRecords: "முந்தைய பதிவுகள் எதுவும் இல்லை."
+  },
+  te: {
+    headerSubtitle: "AI క్లినికల్ హిస్టరీ సంభాషణ వేదిక",
+    docStatus: "ఆన్‌లైన్ · సంప్రదింపుల పూర్వ చరిత్ర",
+    listenVoiceGuide: "వినండి",
+    emergencyAlertTitle: "అత్యవసర హెచ్చరిక",
+    chatPlaceholder: "మీ సమస్యను మాట్లాడండి లేదా టైప్ చేయండి...",
+    completenessLabel: "సమగ్రత శాతం",
+    lblPatient: "రోగి వివరాలు",
+    lblChiefComplaint: "ప్రధాన సమస్య",
+    lblSocrates: "పరిశీలన అంశాలు",
+    lblMedsAllergies: "మందులు & అలర్జీలు",
+    lblAyush: "ఆయుష్ విశ్లేషణ",
+    initialGreeting: "నమస్కారం, మెడికియోస్క్‌కు స్వాగతం! నేను డాక్టర్ మెడికియోస్క్. ఈ రోజు మీరు ఏ సమస్యతో ఆసుపత్రికి వచ్చారు?",
+    dblClickStop: "ఆపడానికి రెండుసార్లు క్లిక్ చేయండి",
+    sendOtpBtn: "OTP పంపండి",
+    otpReady: "OTP సిద్ధంగా ఉంది",
+    dpdpConsent: "DPDP చట్టం 2023 ప్రకారం సమాచార నమోదుకు అంగీకరిస్తున్నాను.",
+    confirmIdentityBtn: "ధృవీకరించి ప్రారంభించండి",
+    dropZoneTitle: "రిపోర్టులను స్ಕಾన్ చేయడానికి అప్‌లోడ్ చేయండి",
+    dropZoneSub: "PDF మరియు ఫోటోలు అనుమతించబడతాయి",
+    submitBtn: "ఆసుపత్రికి సమర్పించండి",
+    lblPriorRecords: "మునుపటి వైద్య రికార్డులు",
+    lblPriorRecordsSub: "డిజిటలైజ్ చేసిన రిపోర్టులు & ప్రిస్క్రిప్షన్లు",
+    lblAbhaLocker: "ABDM హెల్త్ లాకర్",
+    btnScanPastDoc: "రిపోర్టును స్కాన్ చేయండి",
+    btnAutoFill: "చేర్చండి",
+    lblNoPriorRecords: "మునుపటి రికార్డులు కనుగొనబడలేదు."
+  },
+  kn: {
+    headerSubtitle: "ಎಐ ಕ್ಲಿನಿಕಲ್ ಹಿಸ್ಟರಿ ಸಂವಾದ ವೇದಿಕೆ",
+    docStatus: "ಆನ್‌ಲೈನ್ · ತಪಾಸಣಾಪೂರ್ವ ಇತಿಹಾಸ ಸಂಗ್ರಹ",
+    listenVoiceGuide: "ಆಲಿಸಿ",
+    emergencyAlertTitle: "ತುರ್ತು ಎಚ್ಚರಿಕೆ",
+    chatPlaceholder: "ನಿಮ್ಮ ಸಮಸ್ಯೆಯನ್ನು ಮಾತನಾಡಿ ಅಥವಾ ಟೈಪ್ ಮಾಡಿ...",
+    completenessLabel: "ಪೂರ್ಣತೆಯ ಶೇಕಡಾವಾರು",
+    lblPatient: "ರೋಗಿಯ ವಿವರ",
+    lblChiefComplaint: "ಮುಖ್ಯ ಸಮಸ್ಯೆ",
+    lblSocrates: "ಕ್ಲಿನಿಕಲ್ ವಿವರಣೆ",
+    lblMedsAllergies: "ಔಷಧಿಗಳು & ಅಲರ್ಜಿ",
+    lblAyush: "ಆಯುಷ್ ಪ್ರಕೃತಿ",
+    initialGreeting: "ನಮಸ್ಕಾರ, ಮೆಡಿಕಿಯೋಸ್ಕ್‌ಗೆ ಸುಸ್ವಾಗತ! ನಾನು ಡಾ. ಮೆಡಿಕಿಯೋಸ್ಕ್. ಇಂದು ನೀವು ಯಾವ ಆರೋಗ್ಯ ಸಮಸ್ಯೆಗೆ ಬಂದಿದ್ದೀರಿ?",
+    dblClickStop: "ನಿಲ್ಲಿಸಲು ಡಬಲ್ ಕ್ಲಿಕ್ ಮಾಡಿ",
+    sendOtpBtn: "OTP ಕಳುಹಿಸಿ",
+    otpReady: "OTP ಸಿದ್ಧವಾಗಿದೆ",
+    dpdpConsent: "DPDP ಕಾಯ್ದೆ 2023 ರ ಪ್ರಕಾರ ವಿವರ ಸಂಗ್ರಹಿಸಲು ಸಮ್ಮತಿಸುತ್ತೇನೆ.",
+    confirmIdentityBtn: "ಖಚಿತಪಡಿಸಿ ಪ್ರಾರಂಭಿಸಿ",
+    dropZoneTitle: "ವರದಿಗಳನ್ನು ಸ್ಕ್ಯಾನ್ ಮಾಡಲು ಅಪ್‌ಲೋಡ್ ಮಾಡಿ",
+    dropZoneSub: "ಪಿಡಿಎಫ್ ಮತ್ತು ಫೋಟೋಗಳು ಸ್ವೀಕಾರಾರ್ಹ",
+    submitBtn: "ಆಸ್ಪತ್ರೆಗೆ ಸಲ್ಲಿಸಿ",
+    lblPriorRecords: "ಹಿಂದಿನ ವೈದ್ಯಕೀಯ ದಾಖಲೆಗಳು",
+    lblPriorRecordsSub: "ಡಿಜಿಟೈಸ್ಡ್ ವರದಿಗಳು ಮತ್ತು ಪ್ರಿಸ್ಕ್ರಿಪ್ಷನ್ಗಳು",
+    lblAbhaLocker: "ABDM ಹೆಲ್ತ್ ಲಾಕರ್",
+    btnScanPastDoc: "ದಾಖಲೆ ಸ್ಕ್ಯಾನ್ ಮಾಡಿ",
+    btnAutoFill: "ಸೇರಿಸಿ",
+    lblNoPriorRecords: "ಹಿಂದಿನ ದಾಖಲೆಗಳು ಕಂಡುಬಂದಿಲ್ಲ."
+  },
+  ml: {
+    headerSubtitle: "എഐ ക്ലിനിക്കൽ ഹിസ്റ്ററി സംഭാഷണ പ്ലാറ്റ്‌ഫോം",
+    docStatus: "ഓൺലൈൻ · രോഗവിവര ശേഖരണം",
+    listenVoiceGuide: "കേൾക്കുക",
+    emergencyAlertTitle: "ട്രയേജ് മുന്നറിയിപ്പ്",
+    chatPlaceholder: "നിങ്ങളുടെ പ്രശ്നം സംസാരിക്കുക അല്ലെങ്കിൽ ടൈപ്പ് ചെയ്യുക...",
+    completenessLabel: "പൂർണ്ണത",
+    lblPatient: "രോഗിയുടെ വിവരം",
+    lblChiefComplaint: "പ്രധാന പ്രശ്നം",
+    lblSocrates: "ക്ലിനിക്കൽ വിവരങ്ങൾ",
+    lblMedsAllergies: "മരുന്നുകളും അലർജിയും",
+    lblAyush: "ആയുഷ് പരിശോധന",
+    initialGreeting: "നമസ്കാരം, മെഡിക്കിയോസ്കിലേക്ക് സ്വാഗതം! ഞാൻ ഡോ. മെഡിക്കിയോസ്ക്. ഇന്ന് താങ്കൾ എന്ത് ആരോഗ്യപ്രശ്നത്തിനാണ് എത്തിയത്?",
+    dblClickStop: "നിർത്താൻ ഇരട്ട ക്ലിക്ക് ചെയ്യുക",
+    sendOtpBtn: "OTP അയക്കുക",
+    otpReady: "OTP തയ്യാറാണ്",
+    dpdpConsent: "DPDP നിയമപ്രകാരം വിവര ശേഖരണത്തിന് സമ്മതിക്കുന്നു.",
+    confirmIdentityBtn: "സ്ഥിരീകരിച്ച് ആരംഭിക്കുക",
+    dropZoneTitle: "റിപ്പോർട്ടുകൾ സ്കാൻ ചെയ്യാൻ അപ്‌ലോഡ് ചെയ്യുക",
+    dropZoneSub: "പിഡിഎഫും ചിത്രങ്ങളും ലഭ്യമാണ്",
+    submitBtn: "ആശുപത്രിയിലേക്ക് അയക്കുക",
+    lblPriorRecords: "മുൻകാല മെഡിക്കൽ രേഖകൾ",
+    lblPriorRecordsSub: "ഡിജിറ്റൈസ് ചെയ്ത ലാബ് റിപ്പോർട്ടുകളും മുൻ കുറിപ്പടികളും",
+    lblAbhaLocker: "ABDM ഹെൽത്ത് ലോക്കർ",
+    btnScanPastDoc: "രേഖകൾ സ്കാൻ ചെയ്യുക",
+    btnAutoFill: "ചേർക്കുക",
+    lblNoPriorRecords: "മുൻകാല രേഖകളൊന്നും കണ്ടെത്തിയില്ല."
+  },
+  gu: {
+    headerSubtitle: "એઆઈ ક્લિનિકલ હિસ્ટ્રી સંવાદ પ્લેટફોર્મ",
+    docStatus: "ઓનલાઈન · પરામર્શ પૂર્વેની માહિતી",
+    listenVoiceGuide: "સાંભળો",
+    emergencyAlertTitle: "તાત્કાલિક ચેતવણી",
+    chatPlaceholder: "આપની તકલીફ બોલો અથવા ટાઈપ કરો...",
+    completenessLabel: "સંપૂર્ણતા",
+    lblPatient: "દર્દીની વિગત",
+    lblChiefComplaint: "મુખ્ય સમસ્યા",
+    lblSocrates: "ક્લિનિકલ વિગતો",
+    lblMedsAllergies: "દવાઓ અને એલર્જી",
+    lblAyush: "આયુષ પ્રકૃતિ",
+    initialGreeting: "નમસ્તે, મેડીકિયોસ્કમાં આપનું સ્વાગત છે! હું ડો. મેડીકિયોસ્ક છું. આજે આપ કઈ તકલીફ માટે આવ્યા છો?",
+    dblClickStop: "રોકવા માટે ડબલ ક્લિક કરો",
+    sendOtpBtn: "OTP મોકલો",
+    otpReady: "OTP તૈયાર છે",
+    dpdpConsent: "DPDP કાયદા ૨૦૨૩ હેઠળ માહિતી રેકોર્ડ કરવા સંમતિ આપું છું.",
+    confirmIdentityBtn: "ચકાસો અને શરૂ કરો",
+    dropZoneTitle: "જૂના રિપોર્ટ સ્કેન કરવા માટે અપલોડ કરો",
+    dropZoneSub: "પીડીએફ અને ફોટો માન્ય છે",
+    submitBtn: "હોસ્પિટલ સિસ્ટમમાં મોકલો",
+    lblPriorRecords: "અગાઉના તબીબી રેકોર્ડ્સ",
+    lblPriorRecordsSub: "ડિજિટાઇઝ્ડ લેબ રિપોર્ટ્સ અને જૂના પ્રિસ્ક્રિપ્શન્સ",
+    lblAbhaLocker: "ABDM હેલ્થ લોકર",
+    btnScanPastDoc: "જૂનો રિપોર્ટ સ્કેન કરો",
+    btnAutoFill: "ઉમેરો",
+    lblNoPriorRecords: "કોઈ જૂના રેકોર્ડ મળ્યા નથી."
+  }
+};
+
+// -------------------------------------------------------------
+// Real-Time Floating Particle Engine (HTML5 Canvas 60 FPS)
+// -------------------------------------------------------------
+function initParticleCanvas() {
+  const canvas = document.getElementById('particleCanvas');
+  const ctx = canvas.getContext('2d');
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+
+  const numParticles = Math.min(Math.floor(window.innerWidth / 18), 70);
+  const particles = [];
+
+  for (let i = 0; i < numParticles; i++) {
+    particles.push({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      vx: (Math.random() - 0.5) * 0.8,
+      vy: (Math.random() - 0.5) * 0.8,
+      radius: Math.random() * 2.5 + 1.2,
+      baseAlpha: Math.random() * 0.4 + 0.25,
+      color: Math.random() > 0.45 ? '13, 148, 136' : '2, 132, 199' // Teal / Cyan
+    });
+  }
+
+  let mouse = { x: -1000, y: -1000 };
+  window.addEventListener('mousemove', e => {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+  });
+
+  function render() {
+    ctx.clearRect(0, 0, width, height);
+
+    // Draw connecting constellation lines
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist < 110) {
+          const alpha = (1 - dist / 110) * 0.25;
+          ctx.beginPath();
+          ctx.strokeStyle = `rgba(56, 189, 248, ${alpha})`;
+          ctx.lineWidth = 0.8;
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.stroke();
+        }
+      }
+    }
+
+    // Draw particles
+    particles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+
+      if (p.x < 0) p.x = width;
+      if (p.x > width) p.x = 0;
+      if (p.y < 0) p.y = height;
+      if (p.y > height) p.y = 0;
+
+      // Mouse proximity reaction
+      const mdx = mouse.x - p.x;
+      const mdy = mouse.y - p.y;
+      const mdist = Math.sqrt(mdx * mdx + mdy * mdy);
+      let renderRadius = p.radius;
+      if (mdist < 100) {
+        renderRadius = p.radius + (1 - mdist / 100) * 2;
+      }
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, renderRadius, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${p.color}, ${p.baseAlpha})`;
+      ctx.shadowColor = `rgba(${p.color}, 0.8)`;
+      ctx.shadowBlur = 8;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    });
+
+    requestAnimationFrame(render);
+  }
+
+  render();
+}
+
+// -------------------------------------------------------------
+// Voice & Speech Synthesis Controls with Double-Click Protection
+// -------------------------------------------------------------
+function stopAllAudioAndMic() {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+  }
+  if (currentSpeechRecognition) {
+    try { currentSpeechRecognition.abort(); } catch(e){}
+    currentSpeechRecognition = null;
+  }
+
+  const micBtn = document.getElementById('micBtn');
+  if (micBtn) micBtn.classList.remove('listening');
+
+  const waveBar = document.getElementById('audioWaveBar');
+  if (waveBar) waveBar.classList.remove('active');
+  activeUtterance = null;
+}
+
+function speakText(text) {
+  if (!('speechSynthesis' in window)) return;
+
+  if (window.speechSynthesis.speaking) {
+    stopAllAudioAndMic();
+    return;
+  }
+
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  const langMap = {
+    en: 'en-IN', hi: 'hi-IN', bn: 'bn-IN', mr: 'mr-IN',
+    ta: 'ta-IN', te: 'te-IN', kn: 'kn-IN', ml: 'ml-IN', gu: 'gu-IN'
+  };
+
+  utterance.lang = langMap[currentLanguage] || 'en-IN';
+  utterance.rate = 0.95;
+  utterance.pitch = 1.0;
+
+  showWaveform("Dr. Starbucks Speaking");
+
+  utterance.onend = () => hideWaveform();
+  utterance.onerror = () => hideWaveform();
+
+  activeUtterance = utterance;
+  window.speechSynthesis.speak(utterance);
+}
+
+function showWaveform(label) {
+  const waveBar = document.getElementById('audioWaveBar');
+  const statusEl = document.getElementById('audioWaveStatus');
+  if (waveBar && statusEl) {
+    statusEl.textContent = `${label} [⏹️ Stop]`;
+    waveBar.classList.add('active');
+  }
+}
+
+function hideWaveform() {
+  const waveBar = document.getElementById('audioWaveBar');
+  if (waveBar) waveBar.classList.remove('active');
+}
+
+function toggleMicInput() {
+  const micBtn = document.getElementById('micBtn');
+  if (micBtn.classList.contains('listening')) {
+    stopAllAudioAndMic();
+    return;
+  }
+
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRec) {
+    alert("Speech recognition is supported on Chrome, Edge, and Android mobile browsers.");
+    return;
+  }
+
+  stopAllAudioAndMic();
+
+  const rec = new SpeechRec();
+  const langMap = {
+    en: 'en-IN', hi: 'hi-IN', bn: 'bn-IN', mr: 'mr-IN',
+    ta: 'ta-IN', te: 'te-IN', kn: 'kn-IN', ml: 'ml-IN', gu: 'gu-IN'
+  };
+
+  rec.lang = langMap[currentLanguage] || 'en-IN';
+  rec.interimResults = false;
+  currentSpeechRecognition = rec;
+
+  micBtn.classList.add('listening');
+  showWaveform("Listening… Speak now");
+
+  rec.onend = () => {
+    micBtn.classList.remove('listening');
+    hideWaveform();
+    currentSpeechRecognition = null;
+  };
+  rec.onerror = () => {
+    micBtn.classList.remove('listening');
+    hideWaveform();
+    currentSpeechRecognition = null;
+  };
+
+  rec.onresult = (e) => {
+    const transcript = e.results[0][0].transcript;
+    const input = document.getElementById('chatInput');
+    input.value = input.value ? input.value + ' ' + transcript : transcript;
+    sendUserMessage();
+  };
+
+  try {
+    rec.start();
+  } catch(err) {
+    micBtn.classList.remove('listening');
+    hideWaveform();
+  }
+}
+
+// -------------------------------------------------------------
+// Chat Message Rendering & Interactive Milestones
+// -------------------------------------------------------------
+function appendDoctorMessage(text, chips = [], inlineCardHtml = "") {
+  const stream = document.getElementById('chatStream');
+
+  const row = document.createElement('div');
+  row.className = 'message-row doctor';
+
+  const avatar = document.createElement('div');
+  avatar.className = 'row-avatar doc';
+  avatar.textContent = '🩺';
+
+  const wrap = document.createElement('div');
+  wrap.className = 'bubble-wrap';
+
+  const bubble = document.createElement('div');
+  bubble.className = 'chat-bubble';
+  bubble.innerHTML = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+  // Voice playback button
+  const audioBtn = document.createElement('button');
+  audioBtn.className = 'bubble-audio-btn';
+  audioBtn.innerHTML = `🔊 Listen <span style="font-size:10.5px; opacity:0.7;">(${currentLanguage.toUpperCase()})</span>`;
+  audioBtn.onclick = () => speakText(text);
+  audioBtn.ondblclick = () => stopAllAudioAndMic();
+
+  wrap.appendChild(bubble);
+  wrap.appendChild(audioBtn);
+
+  // Embedded card if any
+  if (inlineCardHtml) {
+    const cardEl = document.createElement('div');
+    cardEl.innerHTML = inlineCardHtml;
+    wrap.appendChild(cardEl);
+  }
+
+  // Suggestion Chips
+  if (chips && chips.length > 0) {
+    const chipsWrap = document.createElement('div');
+    chipsWrap.className = 'chips-container';
+    chips.forEach(c => {
+      const chip = document.createElement('div');
+      chip.className = 'chip';
+      chip.innerHTML = `${c.icon || '👉'} ${c.label || c.text}`;
+      chip.onclick = () => {
+        const userText = c.text || c.label;
+        document.getElementById('chatInput').value = userText;
+        sendUserMessage();
+      };
+      chipsWrap.appendChild(chip);
+    });
+    wrap.appendChild(chipsWrap);
+  }
+
+  row.appendChild(avatar);
+  row.appendChild(wrap);
+  stream.appendChild(row);
+
+  stream.scrollTop = stream.scrollHeight;
+}
+
+function appendPatientMessage(text) {
+  const stream = document.getElementById('chatStream');
+
+  const row = document.createElement('div');
+  row.className = 'message-row patient';
+
+  const avatar = document.createElement('div');
+  avatar.className = 'row-avatar pat';
+  avatar.textContent = '👤';
+
+  const wrap = document.createElement('div');
+  wrap.className = 'bubble-wrap';
+
+  const bubble = document.createElement('div');
+  bubble.className = 'chat-bubble';
+  bubble.textContent = text;
+
+  wrap.appendChild(bubble);
+  row.appendChild(avatar);
+  row.appendChild(wrap);
+  stream.appendChild(row);
+
+  stream.scrollTop = stream.scrollHeight;
+}
+
+function showTypingIndicator() {
+  const stream = document.getElementById('chatStream');
+  const typing = document.createElement('div');
+  typing.id = 'activeTypingIndicator';
+  typing.className = 'message-row doctor';
+  typing.innerHTML = `
+    <div class="row-avatar doc">🩺</div>
+    <div class="typing-indicator">
+      <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+    </div>
+  `;
+  stream.appendChild(typing);
+  stream.scrollTop = stream.scrollHeight;
+}
+
+function removeTypingIndicator() {
+  const typing = document.getElementById('activeTypingIndicator');
+  if (typing) typing.remove();
+}
+
+// -------------------------------------------------------------
+// Core Conversational Turn Processing & API Integration
+// -------------------------------------------------------------
+async function sendUserMessage() {
+  const inputEl = document.getElementById('chatInput');
+  const message = inputEl.value.trim();
+  if (!message) return;
+
+  hideValidationToast();
+  stopAllAudioAndMic();
+
+  // Render patient message in stream
+  appendPatientMessage(message);
+  inputEl.value = '';
+  inputEl.style.height = 'auto';
+
+  // Record in conversation history
+  conversationHistory.push({ role: 'patient', content: message });
+
+  showTypingIndicator();
+
+  try {
+    const res = await fetch('/api/converse/chat-consult', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: message,
+        conversation_history: conversationHistory,
+        current_state: consultationState,
+        language: currentLanguage
+      })
+    });
+
+    const data = await res.json();
+    removeTypingIndicator();
+
+    if (!data.valid) {
+      showValidationToast(data.reply.replace('⚠️', '').trim());
+      appendDoctorMessage(data.reply, data.suggestions || []);
+      speakText(data.reply);
+      return;
+    }
+
+    // Valid Medical Turn
+    consultationState = data.current_state || consultationState;
+    updateTelemetryUI(data);
+
+    conversationHistory.push({ role: 'doctor', content: data.reply });
+
+    // If complete -> render document upload dropzone & review summary card
+    if (data.is_complete) {
+      const summaryCardHtml = buildMilestoneCompletionHtml();
+      appendDoctorMessage(data.reply, data.suggestions || [], summaryCardHtml);
+    } else {
+      appendDoctorMessage(data.reply, data.suggestions || []);
+    }
+
+    // Audio Playback
+    speakText(data.reply);
+
+  } catch (err) {
+    removeTypingIndicator();
+    console.error("Consultation fetch error", err);
+    // Offline resilient fallback
+    handleLocalFallbackTurn(message);
+  }
+}
+
+function showValidationToast(msg) {
+  const toast = document.getElementById('validationToast');
+  const msgEl = document.getElementById('validationToastMsg');
+  msgEl.textContent = msg;
+  toast.classList.add('visible');
+}
+
+function hideValidationToast() {
+  const toast = document.getElementById('validationToast');
+  toast.classList.remove('visible');
+}
+
+function handleInputKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendUserMessage();
+  }
+}
+
+// -------------------------------------------------------------
+// UI Updates: Live Telemetry & Progress Meter
+// -------------------------------------------------------------
+function updateTelemetryUI(data) {
+  const state = data.current_state || consultationState;
+
+  // Completeness Bar
+  const pct = data.completeness || state.completeness_percent || 35;
+  document.getElementById('completenessPercent').textContent = `${pct}%`;
+  document.getElementById('completenessFill').style.width = `${pct}%`;
+
+  // Chief Complaint
+  if (state.chief_complaint) {
+    document.getElementById('telemetryComplaint').textContent = state.chief_complaint;
+  }
+
+  // SOCRATES
+  if (state.socrates) {
+    if (state.socrates.onset_character) document.getElementById('telOnset').textContent = state.socrates.onset_character.slice(0, 45);
+    if (state.socrates.associations_severity) document.getElementById('telAssoc').textContent = state.socrates.associations_severity.slice(0, 45);
+  }
+
+  // Meds & Allergies
+  if (state.medications) document.getElementById('telMeds').textContent = state.medications;
+  if (state.allergies) document.getElementById('telAllergies').textContent = state.allergies;
+
+  // AYUSH
+  if (state.prakriti) document.getElementById('telPrakriti').textContent = state.prakriti;
+  if (state.agni) document.getElementById('telAgni').textContent = state.agni;
+
+  // Triage Priority
+  const badge = document.getElementById('triageBadge');
+  const triage = data.triage_level || state.triage_level || 'routine';
+  badge.className = `triage-badge ${triage}`;
+  badge.textContent = `${triage.toUpperCase()} PRIORITY`;
+
+  // Emergency Banner
+  const emBanner = document.getElementById('emergencyBanner');
+  if (data.red_flag || state.red_flag || triage === 'emergency') {
+    emBanner.classList.add('visible');
+  } else {
+    emBanner.classList.remove('visible');
+  }
+}
+
+// -------------------------------------------------------------
+// Milestone Cards (ABHA Auth & Case Completion)
+// -------------------------------------------------------------
+function getInitialChips(lang) {
+  const chipsMap = {
+    hi: [
+      { label: "सर्दी, खांसी व जुकाम", icon: "🤧", text: "मुझे 2 दिन से सर्दी, खांसी और जुकाम है" },
+      { label: "तेज़ बुखार व कंपकंपी", icon: "🌡️", text: "मुझे तेज़ बुखार और कंपकंपी है" },
+      { label: "सीने में तेज़ दर्द व भारीपन", icon: "🫀", text: "सीने में तेज़ दर्द और भारी दबाव है" },
+      { label: "पेट में दर्द व उल्टी", icon: "🫄", text: "पेट में तेज़ दर्द और उल्टी हो रही है" },
+      { label: "सिरदर्द व चक्कर आना", icon: "🧠", text: "सिर में तेज़ दर्द और चक्कर आ रहे हैं" },
+      { label: "घुटनों व जोड़ों में दर्द", icon: "🦴", text: "घुटनों और जोड़ों में दर्द व सूजन है" }
+    ],
+    bn: [
+      { label: "সর্দি, কাশি ও জ্বরভাব", icon: "🤧", text: "আমার ২ দিন ধরে সর্দি, কাশি ও নাক বন্ধের সমস্যা" },
+      { label: "তীব্র জ্বর ও কাঁপুনি", icon: "🌡️", text: "আমার তীব্র জ্বর ও গা কাঁপুনি দিয়ে শরীর ব্যথা" },
+      { label: "বুকে তীব্র ব্যথা ও চাপ", icon: "🫀", text: "বুকে তীব্র চাপ ও ব্যথা অনুভূত হচ্ছে" },
+      { label: "পেটে ব্যথা ও বমি", icon: "🫄", text: "পেটে তীব্র ব্যথা ও বমি বমি ভাব" },
+      { label: "মাথা ঘোরা ও তীব্র মাথা ব্যথা", icon: "🧠", text: "প্রচণ্ড মাথা ব্যথা ও মাথা ঘোরার সমস্যা" },
+      { label: "হাঁটু ও গাঁটে গাঁটে ব্যথা", icon: "🦴", text: "হাঁটু ও জয়েন্টে ফোলা ভাব এবং তীব্র ব্যথা" }
+    ],
+    mr: [
+      { label: "सर्दी, खोकला व पडसे", icon: "🤧", text: "मला २ दिवसांपासून सर्दी, खोकला आणि घशात खवखव आहे" },
+      { label: "तीव्र ताप व भरून येणे", icon: "🌡️", text: "मला तीव्र ताप आणि अंगदुखीचा त्रास होतोय" },
+      { label: "छातीत तीव्र कळ व दाब", icon: "🫀", text: "छातीत तीव्र दुखणे आणि जडपणा जाणवत आहे" },
+      { label: "पोटदुखी व मळमळ", icon: "🫄", text: "पोटात तीव्र कळा येऊन उलट्या होत आहेत" },
+      { label: "डोकेदुखी व चक्कर", icon: "🧠", text: "तीव्र डोकेदुखी आणि चक्कर येत आहे" },
+      { label: "गुडघे व सांधेदुखी", icon: "🦴", text: "गुडघ्यात आणि सांध्यांमध्ये सूज व तीव्र वेदना आहेत" }
+    ],
+    ta: [
+      { label: "சளி, இருமல் & காய்ச்சல்", icon: "🤧", text: "எனக்கு 2 நாட்களாக சளி, இருமல் மற்றும் தொண்டை வலி உள்ளது" },
+      { label: "அதிக காய்ச்சல் & குளிர்", icon: "🌡️", text: "எனக்கு அதிக காய்ச்சல் மற்றும் நடுக்கத்துடன் உடல் வலி உள்ளது" },
+      { label: "நெஞ்சு வலி & இறுக்கம்", icon: "🫀", text: "நெஞ்சில் கடுமையான வலி மற்றும் அழுத்தம் உள்ளது" },
+      { label: "வயிற்று வலி & வாந்தி", icon: "🫄", text: "கடுமையான வயிற்று வலி மற்றும் வாந்தி உணர்வு உள்ளது" },
+      { label: "தலைவலி & தலைச்சுற்றல்", icon: "🧠", text: "கடுமையான தலைவலி மற்றும் தலைச்சுற்றல் உள்ளது" },
+      { label: "மூட்டு & முழங்கால் வலி", icon: "🦴", text: "மூட்டுகளில் வீக்கம் மற்றும் வலி உள்ளது" }
+    ],
+    te: [
+      { label: "జలుబు, దగ్గు & తుమ్ములు", icon: "🤧", text: "నాకు 2 రోజులుగా జలుబు, దగ్గు మరియు గొంతు నొప్పి ఉంది" },
+      { label: "తీవ్రమైన జ్వరం & వణుకు", icon: "🌡️", text: "నాకు విపరీతమైన జ్వరం మరియు ఒళ్ళు నొప్పులు ఉన్నాయి" },
+      { label: "ఛాతీ నొప్పి & భారము", icon: "🫀", text: "ఛాతీలో తీవ్రమైన నొప్పి మరియు ఒత్తిడిగా ఉంది" },
+      { label: "కడుపు నొప్పి & వాంతులు", icon: "🫄", text: "తీవ్రమైన కడుపు నొప్పి మరియు వాంతులు అవుతున్నాయి" },
+      { label: "తీవ్ర తలనొప్పి & కళ్ళు తిరగడం", icon: "🧠", text: "తీవ్రమైన తలనొప్పి మరియు కళ్ళు తిరుగుతున్నాయి" },
+      { label: "కీళ్ళ & మోకాళ్ళ నొప్పులు", icon: "🦴", text: "మోకాళ్ళు మరియు కీళ్ళలో వాపు, నొప్పులు ఉన్నాయి" }
+    ],
+    kn: [
+      { label: "ನೆಗಡಿ, ಕೆಮ್ಮು & ಗಂಟಲು ನೋವು", icon: "🤧", text: "ನನಗೆ 2 ದಿನಗಳಿಂದ ನೆಗಡಿ, ಕೆಮ್ಮು ಮತ್ತು ಗಂಟಲು ನೋವು ಇದೆ" },
+      { label: "ತೀವ್ರ ಜ್ವರ & ಚಳಿ", icon: "🌡️", text: "ನನಗೆ ತೀವ್ರ ಜ್ವರ ಮತ್ತು ಮೈಕೈ ನೋವು ಇದೆ" },
+      { label: "ಎದೆ ನೋವು & ಭಾರ", icon: "🫀", text: "ಎದೆಯಲ್ಲಿ ತೀವ್ರವಾದ ನೋವು ಮತ್ತು ಒತ್ತಡ ಅನುಭವವಾಗುತ್ತಿದೆ" },
+      { label: "ಹೊಟ್ಟೆ ನೋವು & ವಾಂತಿ", icon: "🫄", text: "ತೀವ್ರ ಹೊಟ್ಟೆ ನೋವು ಮತ್ತು ವಾಂತಿ ಬರುತ್ತಿದೆ" },
+      { label: "ತಲೆನೋವು & ತಲೆತಿರುಗುವಿಕೆ", icon: "🧠", text: "ತೀವ್ರ ತಲೆನೋವು ಮತ್ತು ತಲೆತಿರುಗುವಿಕೆ ಇದೆ" },
+      { label: "ಮಂಡಿ & ಕೀಲು ನೋವು", icon: "🦴", text: "ಮಂಡಿ ಹಾಗೂ ಕೀಲುಗಳಲ್ಲಿ ಊತ ಮತ್ತು ನೋವು ಇದೆ" }
+    ],
+    ml: [
+      { label: "ജലദോഷം, ചുമ & തൊണ്ടവേദന", icon: "🤧", text: "എനിക്ക് 2 ദിവസമായി കടുത്ത ജലദോഷവും ചുമയും ഉണ്ട്" },
+      { label: "കടുത്ത പനി & വിറയൽ", icon: "🌡️", text: "എനിക്ക് കടുത്ത പനിയും ശരീരവേദനയും ഉണ്ട്" },
+      { label: "നെഞ്ചുവേദന & ഭാരം", icon: "🫀", text: "നെഞ്ചിൽ ശക്തമായ വേദനയും ഭാരവും അനുഭവപ്പെടുന്നു" },
+      { label: "വയറുവേദന & ഛർദ്ദി", icon: "🫄", text: "കടുത്ത വയറുവേദനയും ഛർദ്ദിയും ഉണ്ടാകുന്നു" },
+      { label: "തലവേദന & തലകറക്കം", icon: "🧠", text: "കടുത്ത തലവേദനയും തലകറക്കവും അനുഭവപ്പെടുന്നു" },
+      { label: "സന്ധി & കാൽമുട്ട് വേദന", icon: "🦴", text: "കാൽമുട്ടിലും സന്ധികളിലും വീക്കവും വേദനയും ഉണ്ട്" }
+    ],
+    gu: [
+      { label: "શરદી, ઉધરસ અને કફ", icon: "🤧", text: "મને ૨ દિવસથી શરદી, ઉધરસ અને ગળામાં દુખાવો છે" },
+      { label: "તીવ્ર તાવ અને ધ્રુજારી", icon: "🌡️", text: "મને સખત તાવ અને શરીરમાં કંપારી સાથે દુખાવો છે" },
+      { label: "છાતીમાં દુખાવો અને ભાર", icon: "🫀", text: "છાતીમાં તીવ્ર દુખાવો અને દબાણ અનુભવાય છે" },
+      { label: "પેટનો દુખાવો અને ઉલટી", icon: "🫄", text: "પેટમાં તીવ્ર દુખાવો અને ઉલટી થાય છે" },
+      { label: "માથાનો દુખાવો અને ચક્કર", icon: "🧠", text: "સખત માથાનો દુખાવો અને ચક્કર આવે છે" },
+      { label: "સાંધા અને ઘૂંટણનો દુખાવો", icon: "🦴", text: "ઘૂંટણ અને સાંધામાં સોજો અને દુખાવો છે" }
+    ],
+    en: [
+      { label: "Cold, Cough & Flu", icon: "🤧", text: "I have had a cold, cough, and runny nose for 2 days" },
+      { label: "High Fever & Chills", icon: "🌡️", text: "I have high fever with chills and body ache" },
+      { label: "Severe Chest Pain", icon: "🫀", text: "I feel severe chest pain and heavy pressure" },
+      { label: "Stomach Ache & Vomiting", icon: "🫄", text: "I have sharp abdominal pain and vomiting" },
+      { label: "Severe Headache / Migraine", icon: "🧠", text: "I have a severe throbbing headache and dizziness" },
+      { label: "Knee & Joint Pain", icon: "🦴", text: "I have pain and swelling in my knees and joints" }
+    ]
+  };
+  return chipsMap[lang] || chipsMap['en'];
+}
+
+function getWelcomeMessage(lang, name, abha) {
+  const cleanName = name || 'Patient';
+  const cleanAbha = abha || 'Verified';
+  const welcomes = {
+    hi: `नमस्ते और स्टारबक्स में आपका स्वागत है! श्री/श्रीमती **${cleanName}** (आभा: \`${cleanAbha}\`)। मैं डॉ. स्टारबक्स हूँ। कृपया अपनी मुख्य बीमारी या लक्षण बताएं, या नीचे दिए गए त्वरित कार्ड में से चुनें:`,
+    bn: `নমস্কার এবং স্টারবাক্সে স্বাগতম! **${cleanName}** (আভা: \`${cleanAbha}\`)। আমি ডঃ স্টারবাক্স। আপনার প্রধান শারীরিক সমস্যা জানান বা নিচের বোতাম থেকে বেছে নিন:`,
+    mr: `नमस्कार आणि स्टारबक्स मध्ये आपले स्वागत आहे! **${cleanName}** (आभा: \`${cleanAbha}\`)। मी डॉ. स्टारबक्स आहे. आज आपण कोणत्या त्रासासाठी आला आहात ते सांगा किंवा खालील पर्यायांपैकी निवडा:`,
+    ta: `வணக்கம், ஸ்டார்பக்ஸிற்கு நல்வரவு! **${cleanName}** (ஆபா: \`${cleanAbha}\`). நான் டாக்டர் ஸ்டார்பக்ஸ். உங்கள் முக்கிய பிரச்சனை என்னவென்று கூறுங்கள் அல்லது கீழே உள்ள விருப்பங்களில் ஒன்றைத் தேர்ந்தெடுக்கவும்:`,
+    te: `నమస్కారం, స్టార్‌బక్స్‌కు స్వాగతం! **${cleanName}** (ఆభా: \`${cleanAbha}\`). నేను డాక్టర్ స్టార్‌బక్స్. మీ ప్రధాన సమస్య లేదా లక్షణాలను తెలియజేయండి లేదా క్రింది ఎంపికలలో ఒకదాన్ని ఎంచుకోండి:`,
+    kn: `ನಮಸ್ಕಾರ ಮತ್ತು ಸ್ಟಾರ್‌ಬಕ್ಸ್‌ಗೆ ಸುಸ್ವಾಗತ! **${cleanName}** (ಆಭಾ: \`${cleanAbha}\`). ನಾನು ಡಾ. ಸ್ಟಾರ್‌ಬಕ್ಸ್. ನಿಮ್ಮ ಮುಖ್ಯ ಆರೋಗ್ಯ ಸಮಸ್ಯೆಯನ್ನು ತಿಳಿಸಿ ಅಥವಾ ಕೆಳಗಿನ ಆಯ್ಕೆಗಳಲ್ಲಿ ಒಂದನ್ನು ಆರಿಸಿ:`,
+    ml: `നമസ്കാരം, സ്റ്റാർബക്സിലേക്ക് സ്വാഗതം! **${cleanName}** (ആഭാ: \`${cleanAbha}\`). ഞാൻ ഡോ. സ്റ്റാർബക്സ്. നിങ്ങളുടെ പ്രധാന ശാരീരിക പ്രശ്നം വ്യക്തമാക്കുക അല്ലെങ്കിൽ താഴെ പറയുന്നവയിൽ ഒന്ന് തിരഞ്ഞെടുക്കുക:`,
+    gu: `નમસ્તે અને સ્ટારબક્સમાં આપનું સ્વાગત છે! **${cleanName}** (આભા: \`${cleanAbha}\`). હું ડો. સ્ટારબક્સ છું. કૃપા કરીને આપની મુખ્ય તકલીફ જણાવો અથવા નીચેના વિકલ્પોમાંથી પસંદ કરો:`,
+    en: `Namaste and welcome to Starbucks! Hello **${cleanName}** (ABHA: \`${cleanAbha}\`). I am Dr. Starbucks, your AI clinical registrar. Please describe your primary symptoms or select one of the common health concerns below to begin:`
+  };
+  return welcomes[lang] || welcomes['en'];
+}
+
+function renderInitialWelcomeCard() {
+  const welcomeText = getWelcomeMessage(currentLanguage, patientName, abhaId);
+  const initialChips = getInitialChips(currentLanguage);
+  appendDoctorMessage(welcomeText, initialChips);
+}
+
+function buildMilestoneCompletionHtml() {
+  const dict = I18N[currentLanguage] || I18N['en'];
+
+  return `
+    <div class="inline-card">
+      <div style="font-weight:800; font-size:14px; margin-bottom:6px; color:var(--ink);">
+        📄 Upload Medical Prescriptions or Lab Reports (Optional OCR)
+      </div>
+      <p style="font-size:12px; color:var(--muted); margin:0 0 12px;">
+        Scan your previous physical medical records for AI entity extraction.
+      </p>
+
+      <div class="drop-zone" onclick="document.getElementById('docFileInput').click()">
+        <div style="font-size:26px; margin-bottom:4px;">📤</div>
+        <strong style="font-size:13px; color:var(--primary-dark);">${dict.dropZoneTitle}</strong>
+        <div style="font-size:11.5px; color:var(--muted);">${dict.dropZoneSub}</div>
+      </div>
+      <input type="file" id="docFileInput" style="display:none;" accept=".pdf,.png,.jpg,.jpeg,.txt" onchange="handleFileUpload(event)" />
+      <div id="uploadStatusText" style="font-size:12px; font-weight:700; color:var(--primary); margin-top:8px;"></div>
+
+      <div style="border-top:1px solid var(--line); margin-top:14px; padding-top:14px;">
+        <button class="btn btn-primary" style="width:100%; font-size:14px;" onclick="submitCompleteKioskCase()">
+          🏥 ${dict.submitBtn} →
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+// -------------------------------------------------------------
+// Actions & Backend Submissions
+// -------------------------------------------------------------
+async function confirmAbhaAndBegin() {
+  const name = document.getElementById('abhaNameInput').value.trim();
+  const abha = document.getElementById('abhaNumInput').value.trim();
+  const consent = document.getElementById('dpdpConsentCheckbox').checked;
+
+  if (!consent) {
+    alert("Please accept the DPDP Act 2023 consent terms to proceed with consultation.");
+    return;
+  }
+
+  patientName = name || patientName;
+  abhaId = abha || abhaId;
+  document.getElementById('telemetryPatient').textContent = `${patientName} · 42y / Male`;
+  document.getElementById('telemetryAbha').textContent = `ABHA: ${abhaId}`;
+  document.getElementById('abhaBadge').textContent = `ABHA: ${abhaId}`;
+
+  try {
+    await fetch('/auth/abha-verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ abha_id: abhaId, full_name: patientName, otp: "123456" })
+    });
+  } catch(e){}
+
+  appendPatientMessage(`My name is ${patientName}, and my ABHA ID is ${abhaId}. Identity verified.`);
+  
+  const followUp = (I18N[currentLanguage] && I18N[currentLanguage].initialGreeting) || I18N['en'].initialGreeting;
+  appendDoctorMessage(`Identity confirmed, ${patientName}. Please state your primary health concern, or select from one of the quick cards below:`, [
+    { label: "Cold & Cough", icon: "🤧", text: "I have cold and cough" },
+    { label: "High Fever", icon: "🌡️", text: "I have high fever with chills" },
+    { label: "Chest Pain", icon: "🫀", text: "Severe chest pain and pressure" },
+    { label: "Stomach Ache", icon: "🫄", text: "Severe stomach pain and nausea" },
+    { label: "Migraine / Headache", icon: "🧠", text: "Severe throbbing headache" },
+    { label: "Joint & Knee Pain", icon: "🦴", text: "Knee and joint pain with swelling" }
+  ]);
+}
+
+function requestAbdmOtp() {
+  const msg = document.getElementById('otpDispatchMsg');
+  if (msg) {
+    msg.innerHTML = `✅ <strong>ABDM OTP Dispatched!</strong> Sent to mobile ending in <strong>******4829</strong> (Demo Code: <strong>123456</strong>)`;
+    msg.style.color = "var(--success)";
+  }
+}
+
+async function handleFileUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const status = document.getElementById('uploadStatusText');
+  status.textContent = `Scanning ${file.name} with AI OCR…`;
+
+  const formData = new FormData();
+  formData.append('patient_id', patientId);
+  formData.append('doc_type', 'prescription');
+  formData.append('file', file);
+
+  try {
+    const res = await fetch('/upload-case', {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+    if (res.ok) {
+      status.textContent = `✓ Digitized: ${file.name} · OCR Extracted Successfully`;
+      uploadedDocuments.push({ name: file.name, type: 'prescription' });
+      appendDoctorMessage(`📄 I have successfully digitized your uploaded document **${file.name}** and linked it to your electronic health record.`);
+    } else {
+      status.textContent = "OCR processing failed.";
+    }
+  } catch(err) {
+    status.textContent = "Network error uploading document.";
+  }
+}
+
+async function submitCompleteKioskCase() {
+  const payload = {
+    chief_complaint: consultationState.chief_complaint || "Routine consultation",
+    present_illness: Object.values(consultationState.socrates).join(', ') || consultationState.chief_complaint,
+    past_history: consultationState.past_history || "None reported",
+    medications: consultationState.medications || "None reported",
+    allergies: consultationState.allergies || "None",
+    lifestyle: consultationState.lifestyle || "Standard routine",
+    prakriti: consultationState.prakriti || "Kapha-Vata",
+    agni: consultationState.agni || "Manda Agni",
+    ahara_vihara: consultationState.ahara_vihara || "Pratishyaya assessment",
+    dashavidha_pariksha: "Sara: Madhyama, Samhanana: Madhyama",
+    socrates: consultationState.socrates,
+    ros: {},
+    consent_info: { dpdp_consented: true, scope: "opd_consultation_abdm", audio_played: true },
+    abha_id: abhaId,
+    language: currentLanguage
+  };
+
+  showTypingIndicator();
+
+  try {
+    const res = await fetch(`/intake/${patientId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    removeTypingIndicator();
+
+    if (res.ok && data.status === 'success') {
+      // Hide chat stream, validation toast, input bar & alert banner completely
+      document.getElementById('chatStream').style.display = 'none';
+      const toast = document.getElementById('validationToast');
+      if (toast) toast.style.display = 'none';
+      const inputBar = document.querySelector('.chat-input-bar');
+      if (inputBar) inputBar.style.display = 'none';
+      const emBanner = document.getElementById('emergencyBanner');
+      if (emBanner) emBanner.style.display = 'none';
+
+      // Populate token & registration details
+      const triageUrgency = (data.triage_level || consultationState.triage_level || 'routine').toUpperCase();
+      document.getElementById('successTokenNo').textContent = `#OPD-${patientId}`;
+      document.getElementById('successPatientName').textContent = patientName || 'Walk-in Patient';
+      document.getElementById('successPatientId').textContent = patientId;
+      document.getElementById('successAbhaId').textContent = abhaId || '14-8291-0394-8192';
+
+      const cleanName = (patientName || 'patient').toLowerCase().replace(/[^a-z0-9]/g, '.');
+      document.getElementById('successAbhaAddress').textContent = `${cleanName}@abdm`;
+
+      const badge = document.getElementById('successTriageBadge');
+      badge.textContent = `${triageUrgency} PRIORITY`;
+      badge.className = `triage-badge-large ${triageUrgency.toLowerCase()}`;
+
+      document.getElementById('successComplaint').textContent = consultationState.chief_complaint || "Routine Clinical Consultation";
+      document.getElementById('successTimestamp').textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      // Reveal the full-area registration success view occupying the entire chat section
+      document.getElementById('registrationSuccessView').style.display = 'flex';
+
+      const successVoice = (currentLanguage === 'hi')
+        ? `आपका ओपीडी रजिस्ट्रेशन सफलतापूर्वक दर्ज हो गया है! आपका टोकन नंबर है OPD ${patientId}। कृपया ओपीडी कक्ष 4 में जाएं।`
+        : `Your hospital OPD registration is complete! Your queue token number is OPD ${patientId}. Please proceed to Chamber 4.`;
+      speakText(successVoice);
+
+    } else {
+      alert("Submission failed. Please try again.");
+    }
+  } catch(e) {
+    removeTypingIndicator();
+    alert("Connection error: " + e.message);
+  }
+}
+
+function printTokenPass() {
+  window.print();
+}
+
+async function resetKioskForNextPatient() {
+  try {
+    await fetch('/api/patient/terminate-session', { method: 'POST' });
+  } catch(e){}
+  window.location.href = '/login';
+}
+
+function proceedToCaseReview() {
+  if (consultationState.completeness_percent < 80) {
+    alert("Please answer Dr. Starbucks's questions to build an accurate medical history before submitting.");
+    return;
+  }
+  const summaryCardHtml = buildMilestoneCompletionHtml();
+  appendDoctorMessage("Here is your completed case intake. You can scan past records or submit directly to the physician queue:", [], summaryCardHtml);
+}
+
+// -------------------------------------------------------------
+// Language & Voice Guide (Instant Reactive Switching)
+// -------------------------------------------------------------
+function changeLanguage(lang) {
+  stopAllAudioAndMic();
+  currentLanguage = lang;
+  localStorage.setItem('kiosk_language', lang);
+  const sel = document.getElementById('langSelect');
+  if (sel) sel.value = lang;
+  applyLanguageDict(lang);
+
+  // If we are at the initial state (before user sends first message), re-render greeting and chips immediately!
+  if (conversationHistory.length === 0) {
+    const stream = document.getElementById('chatStream');
+    if (stream) stream.innerHTML = '';
+    renderInitialWelcomeCard();
+  }
+
+  // Also refresh the prior records list with translated buttons
+  if (typeof patientPriorRecordsCache !== 'undefined' && patientPriorRecordsCache) {
+    renderPriorRecordsList(patientPriorRecordsCache);
+  }
+
+  // Re-announce welcome in chosen language
+  playWelcomePrompt();
+}
+
+function applyLanguageDict(lang) {
+  const dict = I18N[lang] || I18N['en'];
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const k = el.getAttribute('data-i18n');
+    if (dict[k]) el.textContent = dict[k];
+  });
+  document.querySelectorAll('[data-placeholder]').forEach(el => {
+    const pk = el.getAttribute('data-placeholder');
+    if (dict[pk]) el.placeholder = dict[pk];
+  });
+  const chatInput = document.getElementById('chatInput');
+  if (chatInput && dict.chatPlaceholder) {
+    chatInput.placeholder = dict.chatPlaceholder;
+  }
+}
+
+function playWelcomePrompt() {
+  const text = (I18N[currentLanguage] && I18N[currentLanguage].initialGreeting) || I18N['en'].initialGreeting;
+  speakText(text);
+}
+
+function toggleTextSize() {
+  document.body.classList.toggle('large-text');
+}
+
+// -------------------------------------------------------------
+// Offline / Resilient Local Turn Fallback
+// -------------------------------------------------------------
+function handleLocalFallbackTurn(message) {
+  const lower = message.toLowerCase();
+  let nextReply = "";
+  let chips = [];
+
+  if (/cold|cough|sardi|khansi/i.test(lower)) {
+    nextReply = "I understand you have a cold. How many days has it been, and is your cough dry or with phlegm?";
+    chips = [
+      { label: "2 days ago", icon: "⚡", text: "Started 2 days ago" },
+      { label: "Dry cough", icon: "🗣️", text: "Dry cough with sore throat" },
+      { label: "Phlegm / Mucus", icon: "🫁", text: "Productive with phlegm" }
+    ];
+    consultationState.category = "cold";
+    consultationState.chief_complaint = message;
+    consultationState.completeness_percent = 40;
+  } else {
+    nextReply = "Thank you for the information. Are you experiencing any other symptoms like fever, vomiting, or body aches?";
+    chips = [
+      { label: "Mild fever", icon: "🌡️", text: "Yes, mild fever" },
+      { label: "No other symptoms", icon: "✅", text: "No other symptoms" }
+    ];
+    consultationState.completeness_percent = Math.min(consultationState.completeness_percent + 20, 100);
+  }
+
+  updateTelemetryUI({ current_state: consultationState, completeness: consultationState.completeness_percent });
+  appendDoctorMessage(nextReply, chips);
+  speakText(nextReply);
+}
+
+// -------------------------------------------------------------
+// Prior Health Records & ABDM Vault Logic
+// -------------------------------------------------------------
+let patientPriorRecordsCache = { documents: [], past_consultations: [] };
+
+async function loadPatientPriorRecords() {
+  const container = document.getElementById('priorRecordsList');
+  const patNameEl = document.getElementById('priorRecordsPatientName');
+  const abhaEl = document.getElementById('priorRecordsAbhaId');
+
+  if (patNameEl) patNameEl.textContent = `${patientName} · Patient`;
+  if (abhaEl) abhaEl.textContent = `ABHA: ${abhaId || 'Linked'}`;
+
+  if (!container) return;
+
+  try {
+    const res = await fetch('/api/patient/my-records');
+    if (!res.ok) {
+      container.innerHTML = `
+        <div class="empty-records-box">
+          <div class="empty-records-icon">📁</div>
+          <div class="empty-records-title">${(I18N[currentLanguage] && I18N[currentLanguage].lblNoPriorRecords) || 'No prior records found'}</div>
+          <p class="empty-records-desc">You can scan past physical prescriptions or lab reports to auto-extract them here.</p>
+        </div>
+      `;
+      return;
+    }
+
+    const data = await res.json();
+    patientPriorRecordsCache = data;
+    renderPriorRecordsList(data);
+  } catch (err) {
+    console.error("Failed to load prior records:", err);
+    container.innerHTML = `
+      <div style="font-size:12px; color:var(--muted); text-align:center; padding:16px;">
+        Unable to load prior records right now.
+      </div>
+    `;
+  }
+}
+
+function renderPriorRecordsList(data) {
+  const container = document.getElementById('priorRecordsList');
+  if (!container) return;
+
+  // Build unified encounters: each past consultation bundles its respective lab reports and prescriptions
+  let encounters = (data && data.encounters) || [];
+  if (encounters.length === 0) {
+    const docs = (data && data.documents) || [];
+    const consults = (data && data.past_consultations) || [];
+    const assigned = new Set();
+
+    consults.forEach((c, idx) => {
+      const cDate = (c.submitted_at || '').substring(0, 10);
+      const matchingDocs = docs.filter(d => !assigned.has(d.id) && (
+        (d.encounter_id && d.encounter_id === c.id) ||
+        (d.record_date && d.record_date === cDate)
+      ));
+      matchingDocs.forEach(d => assigned.add(d.id));
+      encounters.push({
+        encounter_id: `enc_${c.id || idx}`,
+        type: 'opd_consultation',
+        date: cDate || 'Previous Visit',
+        chief_complaint: c.chief_complaint || 'Routine Clinical Consultation',
+        present_illness: c.present_illness,
+        past_history: c.past_history,
+        medications: c.medications,
+        allergies: c.allergies,
+        triage_level: c.triage_level,
+        documents: matchingDocs
+      });
+    });
+
+    docs.filter(d => !assigned.has(d.id)).forEach(d => {
+      encounters.push({
+        encounter_id: `doc_${d.id}`,
+        type: 'diagnostic_record',
+        date: d.record_date || 'Diagnostic Record',
+        chief_complaint: `Diagnostic Investigation (${d.doc_type || 'lab_report'})`,
+        present_illness: '',
+        past_history: (d.diagnoses || []).join(', '),
+        medications: '',
+        allergies: '',
+        triage_level: 'routine',
+        documents: [d]
+      });
+    });
+  }
+
+  // Cache encounters on global state
+  if (patientPriorRecordsCache) {
+    patientPriorRecordsCache.encounters = encounters;
+  }
+
+  if (encounters.length === 0) {
+    container.innerHTML = `
+      <div class="empty-records-box">
+        <div class="empty-records-icon">📂</div>
+        <div class="empty-records-title">${(I18N[currentLanguage] && I18N[currentLanguage].lblNoPriorRecords) || 'No prior records found'}</div>
+        <p class="empty-records-desc">No previous digitized records linked to this ABHA account yet. Tap below to scan a report or prescription.</p>
+        <button class="upload-record-btn" onclick="triggerPriorDocUpload()" style="margin-top:6px;">
+          <span>📤 ${(I18N[currentLanguage] && I18N[currentLanguage].btnScanPastDoc) || 'Scan Past Report'}</span>
+        </button>
+      </div>
+    `;
+    return;
+  }
+
+  let html = '';
+
+  encounters.forEach((enc, idx) => {
+    const hasDocs = enc.documents && enc.documents.length > 0;
+    const triageBadge = enc.triage_level || 'routine';
+    const dateStr = enc.date || 'Previous Visit';
+    const complaint = enc.chief_complaint || 'General Clinical Consultation';
+
+    let attachedDocsHtml = '';
+    if (hasDocs) {
+      attachedDocsHtml = `
+        <div class="encounter-section-box lab-box">
+          <div class="encounter-section-label" style="color:#0369A1;">🧪 RESPECTIVE LAB REPORT &amp; INVESTIGATIONS</div>
+          ${enc.documents.map((doc, docIdx) => `
+            <div class="attached-lab-item">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <span class="attached-lab-filename">📄 ${doc.source_filename}</span>
+                ${doc.stored_filename ? `<a href="/uploads/${doc.stored_filename}" target="_blank" class="btn-view-doc" onclick="event.stopPropagation();">📄 View Report</a>` : ''}
+              </div>
+              <div class="tag-pill-container">
+                ${(doc.diagnoses || []).map(d => `<span class="tag-pill diagnosis" title="Diagnosis">🩺 ${d}</span>`).join('')}
+                ${(doc.medications || []).map(m => `<span class="tag-pill medication" title="Medication">💊 ${typeof m === 'string' ? m : m.name}</span>`).join('')}
+                ${(doc.investigations || []).map(inv => `<span class="tag-pill investigation" title="Lab Value">🔬 ${typeof inv === 'string' ? inv : `${inv.test}: ${inv.value}`}</span>`).join('')}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    html += `
+      <div class="encounter-record-card" id="encounterCard_${idx}">
+        <div class="encounter-header" onclick="toggleEncounter(${idx})" title="Click to view details and attached lab records">
+          <div class="encounter-header-top">
+            <span class="record-type-badge consultation">🩺 Past Medical Record</span>
+            <span class="record-date">${dateStr}</span>
+            <span class="encounter-chevron" id="encounterChevron_${idx}">▼</span>
+          </div>
+          <div class="encounter-complaint-title">
+            "${complaint}"
+          </div>
+          <div class="encounter-meta-row">
+            ${hasDocs ? `<span class="encounter-badge-lab">🧪 ${enc.documents.length} Lab Report Attached</span>` : ''}
+            <span class="encounter-expand-hint" id="encounterHint_${idx}">Click to view record &amp; lab results ▾</span>
+          </div>
+        </div>
+
+        <div class="encounter-content" id="encounterContent_${idx}" style="display:none;">
+          <!-- 1. Previous Consultation Clinical Findings -->
+          <div class="encounter-section-box">
+            <div class="encounter-section-label">📋 PREVIOUS CONSULTATION DETAILS</div>
+            <div class="encounter-text-item"><strong>Complaint:</strong> ${complaint}</div>
+            ${enc.present_illness ? `<div class="encounter-text-item"><strong>Present Illness:</strong> ${enc.present_illness}</div>` : ''}
+            ${enc.past_history && enc.past_history !== 'None reported' ? `<div class="encounter-text-item"><strong>Past History:</strong> ${enc.past_history}</div>` : ''}
+            ${enc.medications && enc.medications !== 'None reported' ? `<div class="encounter-text-item"><strong>Medications:</strong> ${enc.medications}</div>` : ''}
+            <div style="margin-top:6px;">
+              <span class="triage-badge ${triageBadge.toLowerCase()}">${triageBadge.toUpperCase()} PRIORITY</span>
+            </div>
+          </div>
+
+          <!-- 2. Respective Lab Reports & Diagnostics in the SAME card -->
+          ${attachedDocsHtml}
+
+          <!-- 3. One-Click Auto-Fill Button -->
+          <button class="btn-autofill" id="autofillEncounterBtn_${idx}" onclick="autofillEncounterRecord(${idx})">
+            <span>📥 ${(I18N[currentLanguage] && I18N[currentLanguage].btnAutoFill) || 'Auto-fill All to Active Consultation'}</span>
+          </button>
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+function toggleEncounter(index) {
+  const card = document.getElementById(`encounterCard_${index}`);
+  const content = document.getElementById(`encounterContent_${index}`);
+  const hint = document.getElementById(`encounterHint_${index}`);
+  if (!card || !content) return;
+
+  const isExpanded = card.classList.contains('expanded');
+  if (isExpanded) {
+    card.classList.remove('expanded');
+    content.style.display = 'none';
+    if (hint) hint.textContent = 'Click to view record & lab results ▾';
+  } else {
+    card.classList.add('expanded');
+    content.style.display = 'flex';
+    if (hint) hint.textContent = 'Click to hide details ▴';
+  }
+}
+
+function autofillEncounterRecord(index) {
+  const enc = (patientPriorRecordsCache.encounters || [])[index];
+  if (!enc) return;
+
+  let addedItems = [];
+
+  // 1. Complaint & History
+  if (enc.chief_complaint && enc.chief_complaint !== 'Routine Clinical Consultation') {
+    consultationState.past_history = consultationState.past_history
+      ? `${consultationState.past_history}; Prior Visit: ${enc.chief_complaint}`
+      : `Prior Visit: ${enc.chief_complaint}`;
+    addedItems.push(`Previous Complaint: ${enc.chief_complaint}`);
+  }
+
+  if (enc.past_history && enc.past_history !== 'None reported') {
+    consultationState.past_history = `${consultationState.past_history || ''} (${enc.past_history})`;
+  }
+
+  if (enc.medications && enc.medications !== 'None reported') {
+    consultationState.medications = consultationState.medications
+      ? `${consultationState.medications}; ${enc.medications}`
+      : enc.medications;
+    addedItems.push(`Medications: ${enc.medications}`);
+  }
+
+  // 2. Respective Lab Report findings
+  (enc.documents || []).forEach(doc => {
+    const diagnoses = doc.diagnoses || [];
+    const meds = (doc.medications || []).map(m => typeof m === 'string' ? m : m.name);
+    const invs = (doc.investigations || []).map(i => typeof i === 'string' ? i : `${i.test}: ${i.value}`);
+
+    if (diagnoses.length > 0) {
+      const dStr = diagnoses.join(', ');
+      consultationState.past_history = consultationState.past_history
+        ? `${consultationState.past_history}; Known diagnosis: ${dStr}`
+        : `Known diagnosis: ${dStr}`;
+      addedItems.push(`Diagnoses: ${dStr}`);
+    }
+
+    if (meds.length > 0) {
+      const mStr = meds.join(', ');
+      consultationState.medications = consultationState.medications
+        ? `${consultationState.medications}; Rx: ${mStr}`
+        : `Rx: ${mStr}`;
+      addedItems.push(`Rx: ${mStr}`);
+    }
+
+    if (invs.length > 0) {
+      const invStr = invs.join(', ');
+      consultationState.past_history = `${consultationState.past_history || ''} [Lab: ${invStr}]`;
+    }
+  });
+
+  // Update telemetry bar
+  const telMeds = document.getElementById('telMeds');
+  if (telMeds && consultationState.medications) {
+    telMeds.textContent = consultationState.medications;
+  }
+
+  const telOnset = document.getElementById('telOnset');
+  if (telOnset && (!telOnset.textContent || telOnset.textContent === '—')) {
+    telOnset.textContent = 'Chronic / Past Medical Encounter';
+  }
+
+  // Mark button as applied
+  const btn = document.getElementById(`autofillEncounterBtn_${index}`);
+  if (btn) {
+    btn.innerHTML = `<span>✓ Added to Active Consultation</span>`;
+    btn.classList.add('applied');
+    btn.disabled = true;
+  }
+
+  // Doctor chat confirmation
+  const summaryMsg = `I have imported your prior medical record (${enc.date} - ${enc.chief_complaint}) along with respective lab reports into your active chart: ${addedItems.join(' | ')}.`;
+  appendDoctorMessage(summaryMsg);
+  speakText(`Imported prior visit and attached lab reports into your active consultation chart.`);
+}
+
+function triggerPriorDocUpload() {
+  const fileInput = document.getElementById('priorDocFileInput');
+  if (fileInput) fileInput.click();
+}
+
+async function handlePriorDocUpload(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+
+  const container = document.getElementById('priorRecordsList');
+  if (container) {
+    container.innerHTML = `
+      <div class="empty-records-box">
+        <div class="typing-indicator">
+          <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+        </div>
+        <div style="font-size:12.5px; font-weight:700; color:var(--primary); margin-top:8px;">
+          Scanning ${file.name} with AI OCR…
+        </div>
+      </div>
+    `;
+  }
+
+  const formData = new FormData();
+  formData.append('patient_id', patientId);
+  formData.append('doc_type', file.name.toLowerCase().includes('report') ? 'lab_report' : 'prescription');
+  formData.append('file', file);
+
+  try {
+    const res = await fetch('/upload-case', {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+    if (res.ok) {
+      appendDoctorMessage(`📄 Digitized and OCR processed **${file.name}**. Saved into your prior records vault.`);
+      await loadPatientPriorRecords();
+    } else {
+      alert("Failed to digitize document: " + (data.detail || "Server error"));
+      await loadPatientPriorRecords();
+    }
+  } catch (err) {
+    alert("Network error while uploading: " + err.message);
+    await loadPatientPriorRecords();
+  }
+}
+
+// -------------------------------------------------------------
+// Initial Boot & Authentication Gate (Always Login Page First)
+// -------------------------------------------------------------
+async function checkAuthAndInit() {
+  currentLanguage = localStorage.getItem('kiosk_language') || 'en';
+  const sel = document.getElementById('langSelect');
+  if (sel) sel.value = currentLanguage;
+  initParticleCanvas();
+  applyLanguageDict(currentLanguage);
+
+  try {
+    const res = await fetch('/auth/me');
+    if (!res.ok) {
+      window.location.replace('/login');
+      return;
+    }
+    const user = await res.json();
+    if (user.role === 'doctor') {
+      window.location.replace('/doctor');
+      return;
+    }
+    if (user.role === 'admin') {
+      window.location.replace('/admin');
+      return;
+    }
+
+    // Authenticated patient
+    patientName = user.full_name || 'Walk-in Patient';
+    abhaId = user.abha_id || '14-8291-0394-8192';
+    patientId = user.patient_id || ('P' + Math.floor(1000 + Math.random() * 9000));
+
+    const abhaBadge = document.getElementById('abhaBadge');
+    if (abhaBadge) abhaBadge.textContent = `ABHA: ${abhaId}`;
+    const telPat = document.getElementById('telemetryPatient');
+    if (telPat) telPat.textContent = `${patientName} · Patient`;
+    const telAbha = document.getElementById('telemetryAbha');
+    if (telAbha) telAbha.textContent = `ABHA: ${abhaId}`;
+
+    renderInitialWelcomeCard();
+    await loadPatientPriorRecords();
+  } catch (err) {
+    window.location.replace('/login');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', checkAuthAndInit);
+</script>
+</body>
+</html>

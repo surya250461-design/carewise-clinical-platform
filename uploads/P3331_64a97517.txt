@@ -1,0 +1,24 @@
+
+    CENTRAL HOSPITAL CLINICAL LAB & PRESCRIPTION
+    Patient Name: Ramesh Chandra | Date: 2026-09-08
+    
+    DIAGNOSES:
+    - Acute Coronary Syndrome (Suspected NSTEMI)
+    - Uncontrolled Type 2 Diabetes Mellitus
+    
+    INVESTIGATIONS:
+    - HbA1c: 9.4 % (Ref: <5.7 normal, >6.5 diabetic)
+    - Fasting Blood Sugar: 215 mg/dL (Ref: 70-99)
+    - Serum Creatinine: 2.1 mg/dL (Ref: 0.7-1.3)
+    - Troponin-I: 1.85 ng/mL (Ref: <0.04)
+    - Hemoglobin: 13.8 g/dL (Ref: 13.0-17.0)
+    
+    CURRENT RX MEDICATIONS:
+    - Aspirin 150 mg OD
+    - Warfarin 5 mg OD
+    - Metformin 1000 mg BD
+    - Atorvastatin 40 mg HS
+    
+    PROCEDURES:
+    - 12-lead Electrocardiogram (ECG) performed
+    
