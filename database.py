@@ -767,26 +767,32 @@ def get_his_queue():
     """
     Returns the real-time OPD patient queue ordered by triage urgency.
     Emergency level patients appear first, followed by urgent, then routine.
+    Includes summary approval and his push status.
     """
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT patient_id, abha_id, patient_name, triage_level, red_flag,
-               red_flag_reasons, chief_complaint, status, pushed_to_his, his_reference_id, created_at
-        FROM his_queue
+        SELECT h.patient_id, h.abha_id, h.patient_name, h.triage_level, h.red_flag,
+               h.red_flag_reasons, h.chief_complaint, h.status, h.pushed_to_his, h.his_reference_id, h.created_at,
+               s.approved, s.approved_by, s.approved_at, s.doctor_notes
+        FROM his_queue h
+        LEFT JOIN summaries s ON h.patient_id = s.patient_id
         ORDER BY
             CASE
-                WHEN red_flag = 1 OR triage_level = 'emergency' THEN 1
-                WHEN triage_level = 'urgent' THEN 2
+                WHEN h.red_flag = 1 OR h.triage_level = 'emergency' THEN 1
+                WHEN h.triage_level = 'urgent' THEN 2
                 ELSE 3
             END ASC,
-            created_at DESC
+            h.created_at DESC
     """)
     rows = cursor.fetchall()
     conn.close()
 
     queue = []
     for r in rows:
+        pushed = bool(r[8])
+        approved = bool(r[11]) if r[11] is not None else False
+        is_diagnosed = bool(pushed and approved)
         queue.append({
             "patient_id": r[0],
             "abha_id": r[1] or "",
@@ -795,10 +801,15 @@ def get_his_queue():
             "red_flag": bool(r[4]),
             "red_flag_reasons": json.loads(r[5] or "[]"),
             "chief_complaint": r[6] or "",
-            "status": r[7] or "Waiting",
-            "pushed_to_his": bool(r[8]),
+            "status": "Diagnosed" if is_diagnosed else (r[7] or "Waiting"),
+            "pushed_to_his": pushed,
             "his_reference_id": r[9] or "",
             "created_at": r[10] or "",
+            "approved": approved,
+            "approved_by": r[12] or "",
+            "approved_at": r[13] or "",
+            "doctor_notes": r[14] or "",
+            "is_diagnosed": is_diagnosed,
         })
     return queue
 
@@ -815,7 +826,7 @@ def push_to_his(patient_id: str) -> dict:
     cursor = conn.cursor()
     cursor.execute("""
         UPDATE his_queue
-        SET pushed_to_his = 1, his_reference_id = ?, status = 'In Consultation', updated_at = ?
+        SET pushed_to_his = 1, his_reference_id = ?, status = 'Diagnosed', updated_at = ?
         WHERE patient_id = ?
     """, (ref_id, now_iso, patient_id))
 

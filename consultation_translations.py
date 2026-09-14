@@ -1719,3 +1719,25 @@ def get_completion(triage_level: str, lang: str) -> Tuple[str, List[Dict[str, st
 def get_validation_error(error_type: str, lang: str) -> str:
     msg_dict = VALIDATION_MESSAGES.get(lang) or VALIDATION_MESSAGES["en"]
     return msg_dict.get(error_type) or msg_dict.get("gibberish") or "Invalid input."
+
+
+# -------------------------------------------------------------
+# Multilingual Typo Clarification Templates (All 9 Languages)
+# -------------------------------------------------------------
+TYPO_CLARIFICATION_TEMPLATES = {
+    "en": "I noticed a typo in your message ('{original}' → did you mean '{corrected}'?). Let's proceed with your consultation.",
+    "hi": "मैंने आपके संदेश में टाइपिंग त्रुटि देखी ('{original}' → क्या आपका मतलब '{corrected}' था?)। आइए आपका परामर्श शुरू करते हैं।",
+    "ta": "உங்கள் செய்தியில் எழுத்துப் பிழையைக் கண்டறிந்தேன் ('{original}' → நீங்கள் '{corrected}' என்று கூற வந்தீர்களா?). உங்கள் மருத்துவ ஆலோசனையைத் தொடங்குவோம்.",
+    "te": "మీ సందేశంలో టైపింగ్ లోపాన్ని గుర్తించాను ('{original}' → మీరు '{corrected}' అని చెప్పాలనుకున్నారా?). మీ సంప్రదింపులను ప్రారంభిద్దాం.",
+    "bn": "আমি আপনার বার্তায় একটি টাইপো লক্ষ্য করেছি ('{original}' → আপনি কি '{corrected}' বোঝাতে চেয়েছিলেন?)। আসুন আপনার পরামর্শ শুরু করি।",
+    "mr": "मला तुमच्या संदेशात एक टायपो आढळला ('{original}' → तुम्हाला '{corrected}' म्हणायचे होते का?)। चला तुमचा सल्ला सुरू करूया.",
+    "kn": "ನಿಮ್ಮ ಸಂದೇಶದಲ್ಲಿ ಟೈಪಿಂಗ್ ದೋಷವನ್ನು ಗಮನಿಸಿದ್ದೇನೆ ('{original}' → ನೀವು '{corrected}' ಎಂದು ಹೇಳಲು ಬಯಸಿದಿರಾ?). ನಿಮ್ಮ ಸಮಾಲೋಚನೆಯನ್ನು ಮುಂದುವರಿಸೋಣ.",
+    "ml": "നിങ്ങളുടെ സന്ദേശത്തിൽ ഒരു അക്ഷരത്തെറ്റ് ശ്രദ്ധയിൽപ്പെട്ടു ('{original}' → നിങ്ങൾ '{corrected}' എന്നാണോ ഉദ്ദേശിച്ചത്?). നമുക്ക് നിങ്ങളുടെ കൺസൾട്ടേഷൻ ആരംഭിക്കാം.",
+    "gu": "મને તમારા સંદેશમાં ટાઈપિંગ ભૂલ જણાઈ ('{original}' → શું તમારો અર્થ '{corrected}' હતો?). ચાલો તમારી સલાહ આગળ વધારીએ."
+}
+
+
+def get_typo_clarification(original: str, corrected: str, lang: str = "en") -> str:
+    template = TYPO_CLARIFICATION_TEMPLATES.get(lang) or TYPO_CLARIFICATION_TEMPLATES["en"]
+    return template.format(original=original, corrected=corrected)
+

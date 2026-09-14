@@ -157,11 +157,191 @@
   }
   .btn-nav-outline:hover { background: var(--surface-alt); border-color: var(--muted); }
 
-  /* Layout */
+  /* Layout: 3-column doctor workstation */
   .app-layout {
     display: grid;
-    grid-template-columns: 320px 1fr;
+    grid-template-columns: 290px 1fr 310px;
     min-height: calc(100vh - 63px);
+  }
+
+  @media (max-width: 1200px) {
+    .app-layout {
+      grid-template-columns: 260px 1fr 280px;
+    }
+  }
+
+  /* Right Sidebar: Diagnosed Patients Record Book */
+  .record-book-sidebar {
+    background: var(--surface);
+    border-left: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 63px);
+    position: sticky;
+    top: 63px;
+    overflow: hidden;
+  }
+
+  .record-book-header {
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--line);
+    background: var(--surface);
+  }
+
+  .record-book-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .record-book-title {
+    font-size: 14px;
+    font-weight: 800;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--ink);
+  }
+
+  .record-book-badge {
+    background: var(--success-soft);
+    color: var(--success);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(22, 163, 74, 0.2);
+  }
+
+  .record-filter-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .record-period-select {
+    width: 100%;
+    padding: 7px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--surface-alt);
+    color: var(--ink);
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .record-period-select:focus {
+    border-color: var(--primary);
+  }
+
+  .record-search-input {
+    width: 100%;
+    padding: 7px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    font-size: 12px;
+    background: var(--bg);
+    outline: none;
+  }
+  .record-search-input:focus {
+    border-color: var(--primary);
+  }
+
+  .record-book-list {
+    list-style: none;
+    padding: 12px;
+    margin: 0;
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .record-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--success);
+    border-radius: 10px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    box-shadow: var(--shadow-sm);
+  }
+  .record-card:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-light);
+  }
+  .record-card.active {
+    background: rgba(15, 118, 110, 0.04);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 1px var(--primary);
+  }
+
+  .record-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 6px;
+    gap: 6px;
+  }
+
+  .record-card-name {
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.3;
+  }
+
+  .record-card-complaint {
+    font-size: 12px;
+    color: var(--ink-light);
+    margin-bottom: 8px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .record-card-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--muted);
+    border-top: 1px dashed var(--line);
+    padding-top: 6px;
+    margin-top: 4px;
+  }
+
+  .record-card-meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .record-his-ref {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--primary);
+    background: var(--primary-soft);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+
+  .record-signed-stamp {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--success);
+    font-weight: 700;
+    font-size: 11px;
   }
 
   /* Left Sidebar: Live OPD Triage Queue */
@@ -1062,8 +1242,32 @@
           </div>
         </div>
 
-      </div>
     </main>
+
+    <!-- Right Sidebar: Diagnosed Patients Record Book -->
+    <aside class="record-book-sidebar" id="recordBookSidebar">
+      <div class="record-book-header">
+        <div class="record-book-title-row">
+          <h3 class="record-book-title">
+            <span>📖</span> Diagnosed Patients
+          </h3>
+          <span class="record-book-badge" id="diagnosedBadge">0 Cases</span>
+        </div>
+        <div class="record-filter-controls">
+          <select class="record-period-select" id="recordPeriodSelect" onchange="filterDiagnosedRecords()">
+            <option value="today">Daily (Today)</option>
+            <option value="weekly">Weekly (Last 7 Days)</option>
+            <option value="monthly">Monthly (Last 30 Days)</option>
+            <option value="all" selected>All Time</option>
+          </select>
+          <input type="text" class="record-search-input" id="recordSearchInput" placeholder="Filter diagnosed records…" oninput="filterDiagnosedRecords()" />
+        </div>
+      </div>
+
+      <ul class="record-book-list" id="diagnosedRecordList">
+        <!-- Diagnosed patients populated here -->
+      </ul>
+    </aside>
   </div>
 </div>
 
@@ -1098,6 +1302,7 @@ let currentIntake = null;
 let currentSummary = null;
 let currentTimeline = [];
 let allQueuePatients = [];
+let diagnosedPatients = [];
 let activeQueueTab = "triage";
 let summaryMode = "en"; // "en" | "patient"
 let currentUser = null;
@@ -1141,24 +1346,67 @@ async function refreshQueue() {
     const pList = patientsData.patients || [];
 
     // Merge HIS triage and all patients
-    allQueuePatients = pList.map(p => {
+    const merged = pList.map(p => {
       const match = hisList.find(q => q.patient_id === p.patient_id);
+      const pushed = match ? Boolean(match.pushed_to_his) : false;
+      const approved = match ? Boolean(match.approved) : false;
+      const isDiagnosed = match ? Boolean(match.is_diagnosed || (pushed && approved)) : false;
       return {
         patient_id: p.patient_id,
-        full_name: (match && match.full_name) || p.patient_id,
+        full_name: (match && match.patient_name) || (match && match.full_name) || p.full_name || p.patient_id,
         chief_complaint: (match && match.chief_complaint) || "General consultation",
         triage_level: (match && match.triage_level) || (p.red_flag ? "emergency" : "routine"),
         abha_id: (match && match.abha_id) || p.abha_id || "",
-        his_status: (match && match.status) || "waiting",
-        record_count: p.record_count,
+        his_status: (match && match.status) || (isDiagnosed ? "Diagnosed" : "Waiting"),
+        record_count: p.record_count || 0,
         latest_record_date: p.latest_record_date,
+        pushed_to_his: pushed,
+        approved: approved,
+        approved_at: (match && match.approved_at) || "",
+        approved_by: (match && match.approved_by) || "",
+        his_reference_id: (match && match.his_reference_id) || "",
+        created_at: (match && match.created_at) || "",
+        is_diagnosed: isDiagnosed
       };
     });
 
-    renderQueue();
+    // Also include any patients in his_queue not yet in patients table
+    hisList.forEach(q => {
+      if (!merged.find(m => m.patient_id === q.patient_id)) {
+        const isDiagnosed = Boolean(q.is_diagnosed || (q.pushed_to_his && q.approved));
+        merged.push({
+          patient_id: q.patient_id,
+          full_name: q.patient_name || q.patient_id,
+          chief_complaint: q.chief_complaint || "General consultation",
+          triage_level: q.triage_level || "routine",
+          abha_id: q.abha_id || "",
+          his_status: q.status || (isDiagnosed ? "Diagnosed" : "Waiting"),
+          record_count: 0,
+          latest_record_date: "",
+          pushed_to_his: Boolean(q.pushed_to_his),
+          approved: Boolean(q.approved),
+          approved_at: q.approved_at || "",
+          approved_by: q.approved_by || "",
+          his_reference_id: q.his_reference_id || "",
+          created_at: q.created_at || "",
+          is_diagnosed: isDiagnosed
+        });
+      }
+    });
 
-    if (!currentPatientId && allQueuePatients.length > 0) {
-      selectPatient(allQueuePatients[0].patient_id);
+    // Undiagnosed remain in the left queue; Diagnosed move to the right Record Book
+    allQueuePatients = merged.filter(p => !p.is_diagnosed);
+    diagnosedPatients = merged.filter(p => p.is_diagnosed);
+
+    renderQueue();
+    renderDiagnosedRecords();
+
+    if (!currentPatientId) {
+      if (allQueuePatients.length > 0) {
+        selectPatient(allQueuePatients[0].patient_id);
+      } else if (diagnosedPatients.length > 0) {
+        selectPatient(diagnosedPatients[0].patient_id);
+      }
     }
   } catch (err) {
     console.error("Queue load error:", err);
@@ -1194,7 +1442,7 @@ function renderQueue() {
   el.innerHTML = "";
 
   if (list.length === 0) {
-    el.innerHTML = '<li style="padding:20px; text-align:center; color:var(--muted); font-size:12px;">No patients found in queue.</li>';
+    el.innerHTML = '<li style="padding:24px 16px; text-align:center; color:var(--muted); font-size:12px;">No undiagnosed patients waiting in queue.</li>';
     return;
   }
 
@@ -1208,7 +1456,7 @@ function renderQueue() {
       <div class="queue-item ${triageClass}${isActive}" onclick="selectPatient('${p.patient_id}')">
         <div class="q-top">
           <span class="q-name">${p.full_name}</span>
-          <span class="q-triage-badge ${badgeClass}">${p.triage_level || 'ROUTINE'}</span>
+          <span class="q-triage-badge ${badgeClass}">${(p.triage_level || 'ROUTINE').toUpperCase()}</span>
         </div>
         <div class="q-complaint">${p.chief_complaint}</div>
         <div class="q-meta">
@@ -1225,12 +1473,130 @@ function filterPatients() {
   renderQueue();
 }
 
+function isDateInPeriod(dateStr, period) {
+  if (period === 'all') return true;
+  if (!dateStr) return true;
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return true;
+  const now = new Date();
+  if (period === 'today') {
+    return d.getFullYear() === now.getFullYear() &&
+           d.getMonth() === now.getMonth() &&
+           d.getDate() === now.getDate();
+  } else if (period === 'weekly') {
+    const diff = now.getTime() - d.getTime();
+    return diff >= 0 && diff <= 7 * 24 * 60 * 60 * 1000;
+  } else if (period === 'monthly') {
+    const diff = now.getTime() - d.getTime();
+    return diff >= 0 && diff <= 30 * 24 * 60 * 60 * 1000;
+  }
+  return true;
+}
+
+function formatRecordDate(dateStr) {
+  if (!dateStr) return "Diagnosed";
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  } catch (e) {
+    return dateStr;
+  }
+}
+
+function renderDiagnosedRecords() {
+  const period = document.getElementById('recordPeriodSelect') ? document.getElementById('recordPeriodSelect').value : 'all';
+  const filter = (document.getElementById('recordSearchInput') ? document.getElementById('recordSearchInput').value : '').toLowerCase().trim();
+  const el = document.getElementById('diagnosedRecordList');
+  const badge = document.getElementById('diagnosedBadge');
+  if (!el) return;
+
+  let list = [...diagnosedPatients];
+
+  // Filter by period (Daily/Weekly/Monthly/All)
+  list = list.filter(p => {
+    const ts = p.approved_at || p.created_at || p.latest_record_date;
+    return isDateInPeriod(ts, period);
+  });
+
+  // Filter by search query
+  if (filter) {
+    list = list.filter(p =>
+      p.patient_id.toLowerCase().includes(filter) ||
+      p.full_name.toLowerCase().includes(filter) ||
+      p.chief_complaint.toLowerCase().includes(filter) ||
+      (p.abha_id && p.abha_id.toLowerCase().includes(filter)) ||
+      (p.his_reference_id && p.his_reference_id.toLowerCase().includes(filter))
+    );
+  }
+
+  // Sort by approval/created date DESC
+  list.sort((a, b) => {
+    const da = new Date(a.approved_at || a.created_at || 0);
+    const db = new Date(b.approved_at || b.created_at || 0);
+    return db - da;
+  });
+
+  if (badge) {
+    badge.textContent = `${list.length} ${list.length === 1 ? 'Case' : 'Cases'}`;
+  }
+  el.innerHTML = "";
+
+  if (list.length === 0) {
+    el.innerHTML = `
+      <li style="padding:28px 14px; text-align:center; color:var(--muted); font-size:12px;">
+        <div style="font-size:26px; margin-bottom:8px;">📖</div>
+        No diagnosed records found for this period.
+      </li>
+    `;
+    return;
+  }
+
+  list.forEach(p => {
+    const li = document.createElement('li');
+    const badgeClass = `badge-${p.triage_level || 'routine'}`;
+    const isActive = p.patient_id === currentPatientId ? ' active' : '';
+    const dateDisplay = formatRecordDate(p.approved_at || p.created_at);
+
+    li.innerHTML = `
+      <div class="record-card${isActive}" onclick="selectPatient('${p.patient_id}')">
+        <div class="record-card-top">
+          <span class="record-card-name">${p.full_name}</span>
+          <span class="q-triage-badge ${badgeClass}">${(p.triage_level || 'ROUTINE').toUpperCase()}</span>
+        </div>
+        <div class="record-card-complaint">${p.chief_complaint}</div>
+        <div class="record-card-meta">
+          <div class="record-card-meta-row">
+            <span><strong>${p.patient_id}</strong> · ${p.record_count || 0} doc(s)</span>
+            ${p.abha_id ? `<span class="q-abha">${p.abha_id}</span>` : ''}
+          </div>
+          <div class="record-card-meta-row" style="margin-top:2px;">
+            <span class="record-signed-stamp">✓ Signed &amp; Pushed</span>
+            <span style="font-size:10px; color:var(--muted);">${dateDisplay}</span>
+          </div>
+          ${p.his_reference_id ? `
+            <div class="record-card-meta-row" style="margin-top:2px;">
+              <span class="record-his-ref">${p.his_reference_id}</span>
+            </div>
+          ` : ''}
+        </div>
+      </div>
+    `;
+    el.appendChild(li);
+  });
+}
+
+function filterDiagnosedRecords() {
+  renderDiagnosedRecords();
+}
+
 async function selectPatient(patientId) {
   currentPatientId = patientId;
   document.getElementById('emptyWorkstation').style.display = 'none';
   document.getElementById('patientContent').style.display = 'block';
 
   renderQueue();
+  renderDiagnosedRecords();
 
   await Promise.all([
     loadPatientIntake(patientId),
@@ -1245,7 +1611,7 @@ async function loadPatientIntake(patientId) {
     const data = await res.json();
     currentIntake = data.intake;
 
-    const patient = allQueuePatients.find(p => p.patient_id === patientId);
+    const patient = allQueuePatients.find(p => p.patient_id === patientId) || diagnosedPatients.find(p => p.patient_id === patientId);
     document.getElementById('viewPatientName').textContent = (currentIntake && currentIntake.full_name) || (patient && patient.full_name) || patientId;
     document.getElementById('viewPatientId').textContent = patientId;
 
@@ -1445,6 +1811,7 @@ async function saveSummaryEdits(approve) {
     if (res.ok) {
       showToast(approve ? "Clinical summary signed & approved!" : "Draft edits saved.");
       await loadPatientSummary(currentPatientId);
+      await refreshQueue();
     } else {
       alert("Failed to save summary.");
     }
@@ -1464,6 +1831,25 @@ async function loadPatientTimeline(patientId) {
   } catch (err) {
     console.error("Timeline error:", err);
   }
+}
+
+function formatDrugInteraction(d) {
+  if (typeof d === 'string') return d;
+  if (!d) return '';
+  const combo = d.combination || `${d.drug1 || ''} + ${d.drug2 || ''}`.trim() || 'Drug Interaction';
+  const sev = d.severity ? ` <span style="background:#FEE2E2; color:#991B1B; padding:1px 6px; border-radius:4px; font-size:11px; font-weight:700;">${d.severity}</span>` : '';
+  const warn = d.warning || d.description || d.effect || '';
+  return `<strong>${combo}</strong>${sev}${warn ? ': ' + warn : ''}`;
+}
+
+function formatAbnormalFlag(f) {
+  if (typeof f === 'string') return f;
+  if (!f) return '';
+  const test = f.test || f.name || 'Lab Test';
+  const val = f.value ? ` <strong>${f.value}</strong>` : '';
+  const flag = f.flag ? ` [${f.flag}]` : '';
+  const imp = f.clinical_implication ? ` — ${f.clinical_implication}` : '';
+  return `⚠️ <strong>${test}</strong>${val}${flag}${imp}`;
 }
 
 function renderTimelineAndIntelligence() {
@@ -1490,7 +1876,7 @@ function renderTimelineAndIntelligence() {
       <div class="alert-drug-box">
         <h4>⚠️ Adverse Drug-Drug Interaction Warning</h4>
         <ul style="margin:4px 0 0; padding-left:20px; font-size:12.5px; color:#92400E; font-weight:600;">
-          ${allDrugInteractions.map(d => `<li>${d}</li>`).join('')}
+          ${allDrugInteractions.map(d => `<li>${formatDrugInteraction(d)}</li>`).join('')}
         </ul>
       </div>
     `;
@@ -1501,7 +1887,7 @@ function renderTimelineAndIntelligence() {
       <div class="alert-lab-box">
         <h4>🔬 Critical &amp; Abnormal Lab Value Highlights</h4>
         <div class="lab-tag-list">
-          ${allAbnormal.map(f => `<span class="lab-tag">${f}</span>`).join('')}
+          ${allAbnormal.map(f => `<span class="lab-tag">${formatAbnormalFlag(f)}</span>`).join('')}
         </div>
       </div>
     `;
@@ -1604,13 +1990,19 @@ async function pushToHis() {
   btn.textContent = "Pushing to HIS…";
 
   try {
+    // If clinical summary is not yet signed, sign it automatically when pushing to HIS
+    if (currentSummary && !currentSummary.approved) {
+      await saveSummaryEdits(true);
+    }
+
     const res = await fetch(`${API_BASE}/api/his/push/${currentPatientId}`, { method: 'POST' });
     const data = await res.json();
     if (res.ok && data.status === "success") {
       document.getElementById('viewHisBadge').textContent = `HIS Ref: ${data.his_reference_id}`;
       document.getElementById('viewHisBadge').style.background = "var(--success-soft)";
       document.getElementById('viewHisBadge').style.color = "var(--success)";
-      showToast(`Pushed to Hospital EMR (Ref: ${data.his_reference_id})`);
+      showToast(`Case signed & pushed to Hospital EMR (Ref: ${data.his_reference_id})`);
+      await refreshQueue();
     } else {
       alert("HIS Push failed: " + (data.message || "Unknown error"));
     }

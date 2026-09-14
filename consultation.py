@@ -11,6 +11,7 @@ Transforms step-by-step intake into an adaptive conversation:
 """
 
 import re
+import difflib
 from typing import Dict, List, Any, Optional
 
 import consultation_translations as ct
@@ -61,6 +62,212 @@ COMMON_MEDICAL_KEYWORDS = [
     "diabetes", "sugar", "blood pressure", "hypertension", "bp", "fatigue", "tiredness",
     "weakness", "kamjori", "rash", "itching", "khujli", "allergy", "thyroid"
 ] + ct.MULTILINGUAL_MEDICAL_KEYWORDS
+
+# -------------------------------------------------------------
+# Medical Typo Auto-Correction Knowledgebase & Fuzzy Matcher
+# -------------------------------------------------------------
+CANONICAL_SYMPTOMS_MAP = {
+    "cold": ("cold", "cold"),
+    "cough": ("cough", "cold"),
+    "runny nose": ("runny nose", "cold"),
+    "sore throat": ("sore throat", "cold"),
+    "sneezing": ("sneezing", "cold"),
+    "fever": ("fever", "fever"),
+    "chills": ("chills", "fever"),
+    "shivering": ("shivering", "fever"),
+    "chest pain": ("chest pain", "cardiac"),
+    "chest tightness": ("chest tightness", "cardiac"),
+    "heart pain": ("heart pain", "cardiac"),
+    "palpitations": ("palpitations", "cardiac"),
+    "shortness of breath": ("shortness of breath", "cardiac"),
+    "breathlessness": ("breathlessness", "cardiac"),
+    "stomach ache": ("stomach ache", "gastro"),
+    "stomach pain": ("stomach pain", "gastro"),
+    "abdominal pain": ("abdominal pain", "gastro"),
+    "vomiting": ("vomiting", "gastro"),
+    "nausea": ("nausea", "gastro"),
+    "diarrhea": ("diarrhea", "gastro"),
+    "loose motions": ("loose motions", "gastro"),
+    "acidity": ("acidity", "gastro"),
+    "indigestion": ("indigestion", "gastro"),
+    "headache": ("headache", "neuro"),
+    "migraine": ("migraine", "neuro"),
+    "dizziness": ("dizziness", "neuro"),
+    "vertigo": ("vertigo", "neuro"),
+    "knee pain": ("knee pain", "ortho"),
+    "joint pain": ("joint pain", "ortho"),
+    "back pain": ("back pain", "ortho"),
+    "body ache": ("body ache", "fever"),
+    "weakness": ("weakness", "general"),
+    "fatigue": ("fatigue", "general"),
+    "tiredness": ("tiredness", "general"),
+}
+
+SYMPTOM_TYPO_MAP = {
+    # Cold & Cough typos
+    "cld": ("cold", "cold"),
+    "clod": ("cold", "cold"),
+    "codl": ("cold", "cold"),
+    "cole": ("cold", "cold"),
+    "cldd": ("cold", "cold"),
+    "coldd": ("cold", "cold"),
+    "cgf": ("cough", "cold"),
+    "coug": ("cough", "cold"),
+    "cogh": ("cough", "cold"),
+    "coughh": ("cough", "cold"),
+    "caugh": ("cough", "cold"),
+    "cuff": ("cough", "cold"),
+    "cugh": ("cough", "cold"),
+    "khasi": ("cough", "cold"),
+    "khansi": ("cough", "cold"),
+    "sardi": ("cold", "cold"),
+    "sali": ("cold", "cold"),
+    "runy nos": ("runny nose", "cold"),
+    "ronny nose": ("runny nose", "cold"),
+    "runi nose": ("runny nose", "cold"),
+    "sneez": ("sneezing", "cold"),
+    "snezing": ("sneezing", "cold"),
+    "throt": ("sore throat", "cold"),
+    "sor throt": ("sore throat", "cold"),
+    "sore throt": ("sore throat", "cold"),
+    "phlegm": ("cough with phlegm", "cold"),
+    "flegm": ("cough with phlegm", "cold"),
+
+    # Fever & Chills typos
+    "fvr": ("fever", "fever"),
+    "fevr": ("fever", "fever"),
+    "fevrr": ("fever", "fever"),
+    "feverr": ("fever", "fever"),
+    "febr": ("fever", "fever"),
+    "febre": ("fever", "fever"),
+    "bukhra": ("fever", "fever"),
+    "bukhr": ("fever", "fever"),
+    "bukhar": ("fever", "fever"),
+    "kaychal": ("fever", "fever"),
+    "kaichal": ("fever", "fever"),
+    "chil": ("chills", "fever"),
+    "chils": ("chills", "fever"),
+    "shivr": ("shivering", "fever"),
+    "shiverng": ("shivering", "fever"),
+    "temprature": ("high temperature", "fever"),
+    "tempratur": ("high temperature", "fever"),
+    "temp": ("fever", "fever"),
+
+    # Chest Pain & Cardiac typos
+    "chst": ("chest pain", "cardiac"),
+    "ches": ("chest pain", "cardiac"),
+    "chst pain": ("chest pain", "cardiac"),
+    "chset pain": ("chest pain", "cardiac"),
+    "ches pain": ("chest pain", "cardiac"),
+    "chestpain": ("chest pain", "cardiac"),
+    "chect pain": ("chest pain", "cardiac"),
+    "hart pain": ("heart pain", "cardiac"),
+    "heartpain": ("heart pain", "cardiac"),
+    "hart": ("heart pain", "cardiac"),
+    "nenju vali": ("chest pain", "cardiac"),
+    "nenju": ("chest pain", "cardiac"),
+    "palpitasion": ("palpitations", "cardiac"),
+    "palpitation": ("palpitations", "cardiac"),
+    "brth": ("shortness of breath", "cardiac"),
+    "breth": ("shortness of breath", "cardiac"),
+    "brethless": ("breathlessness", "cardiac"),
+    "shorness": ("shortness of breath", "cardiac"),
+    "sort of breath": ("shortness of breath", "cardiac"),
+
+    # Stomach / Gastro typos
+    "stmch": ("stomach ache", "gastro"),
+    "stomac": ("stomach ache", "gastro"),
+    "stmc": ("stomach ache", "gastro"),
+    "stomache": ("stomach ache", "gastro"),
+    "stomc pain": ("stomach pain", "gastro"),
+    "stomach pain": ("stomach pain", "gastro"),
+    "belly pan": ("belly pain", "gastro"),
+    "pet dard": ("stomach pain", "gastro"),
+    "vayiru vali": ("stomach pain", "gastro"),
+    "vayiru": ("stomach pain", "gastro"),
+    "vomt": ("vomiting", "gastro"),
+    "vomting": ("vomiting", "gastro"),
+    "vomet": ("vomiting", "gastro"),
+    "vometing": ("vomiting", "gastro"),
+    "ulti": ("vomiting", "gastro"),
+    "nause": ("nausea", "gastro"),
+    "nausia": ("nausea", "gastro"),
+    "diarhea": ("diarrhea", "gastro"),
+    "diahrea": ("diarrhea", "gastro"),
+    "diareha": ("diarrhea", "gastro"),
+    "lose motion": ("loose motions", "gastro"),
+    "loose motion": ("loose motions", "gastro"),
+    "acydity": ("acidity", "gastro"),
+    "aciditi": ("acidity", "gastro"),
+    "gas prob": ("gastric problem", "gastro"),
+
+    # Headache / Neuro typos
+    "hedache": ("headache", "neuro"),
+    "headac": ("headache", "neuro"),
+    "hedach": ("headache", "neuro"),
+    "headche": ("headache", "neuro"),
+    "head pain": ("headache", "neuro"),
+    "headpain": ("headache", "neuro"),
+    "migran": ("migraine", "neuro"),
+    "migren": ("migraine", "neuro"),
+    "sar dard": ("headache", "neuro"),
+    "sir dard": ("headache", "neuro"),
+    "thalai vali": ("headache", "neuro"),
+    "thalavali": ("headache", "neuro"),
+    "dizzy": ("dizziness", "neuro"),
+    "dizines": ("dizziness", "neuro"),
+    "chakar": ("dizziness", "neuro"),
+
+    # Musculoskeletal / Joint typos
+    "kne pain": ("knee pain", "ortho"),
+    "kne": ("knee pain", "ortho"),
+    "joint pan": ("joint pain", "ortho"),
+    "jont pain": ("joint pain", "ortho"),
+    "muttu vali": ("knee pain", "ortho"),
+    "bady ache": ("body ache", "fever"),
+    "bodyache": ("body ache", "fever"),
+    "badan dard": ("body ache", "fever"),
+    "udal vali": ("body ache", "fever"),
+
+    # General / Fatigue typos
+    "weknss": ("weakness", "general"),
+    "weaknes": ("weakness", "general"),
+    "fatig": ("fatigue", "general"),
+    "fatige": ("fatigue", "general"),
+    "tierd": ("tiredness", "general"),
+    "tierdness": ("tiredness", "general"),
+}
+
+def find_medical_typo(text: str, language: str = "en") -> Optional[Dict[str, str]]:
+    """Detects medical typos in patient messages and returns the intended symptom and clinical category."""
+    cleaned = (text or "").strip().lower()
+    if not cleaned:
+        return None
+    
+    # 1. Direct dictionary match
+    if cleaned in SYMPTOM_TYPO_MAP:
+        corrected, category = SYMPTOM_TYPO_MAP[cleaned]
+        if cleaned != corrected.lower():
+            return {"original": text.strip(), "corrected": corrected, "category": category}
+
+    # 2. Fuzzy match with canonical list
+    words = cleaned.split()
+    if len(words) <= 3:
+        matches = difflib.get_close_matches(cleaned, CANONICAL_SYMPTOMS_MAP.keys(), n=1, cutoff=0.72)
+        if matches:
+            match_key = matches[0]
+            if cleaned != match_key.lower():
+                corrected, category = CANONICAL_SYMPTOMS_MAP[match_key]
+                return {"original": text.strip(), "corrected": corrected, "category": category}
+
+        if len(words) == 1:
+            single_word_syms = [k for k in CANONICAL_SYMPTOMS_MAP.keys() if " " not in k]
+            m = difflib.get_close_matches(words[0], single_word_syms, n=1, cutoff=0.7)
+            if m and words[0] != m[0].lower():
+                corrected, category = CANONICAL_SYMPTOMS_MAP[m[0]]
+                return {"original": text.strip(), "corrected": corrected, "category": category}
+                
+    return None
 
 def validate_medical_input(text: str, stage: str = "chief_complaint", language: str = "en") -> Dict[str, Any]:
     """
@@ -127,6 +334,15 @@ def validate_medical_input(text: str, stage: str = "chief_complaint", language: 
 
     # 4. Off-topic & Non-medical input detection (specifically for the initial chief complaint stage)
     if stage == "chief_complaint":
+        # Check for medical symptom typo first
+        typo = find_medical_typo(cleaned, language)
+        if typo:
+            return {
+                "valid": True,
+                "is_typo": True,
+                "typo_info": typo
+            }
+
         # If the input is exactly a non-medical greeting or chatter
         if cleaned in NON_MEDICAL_PHRASES or any(cleaned == p for p in NON_MEDICAL_PHRASES):
             msg = ct.get_validation_error("non_medical", language)
@@ -297,6 +513,26 @@ def process_consultation_turn(
 
     # Step B: Route by Stage
     if stage == "chief_complaint":
+        typo_info = val.get("typo_info")
+        if typo_info:
+            original_word = typo_info["original"]
+            corrected_word = typo_info["corrected"]
+            category = typo_info.get("category") or detect_category(corrected_word)
+            current_state["category"] = category
+            current_state["chief_complaint"] = corrected_word
+            current_state["stage"] = "turn_1"
+            current_state["completeness_percent"] = 35
+
+            red_flag, reasons, triage = evaluate_emergency_red_flags(corrected_word)
+            current_state["red_flag"] = red_flag
+            current_state["red_flag_reasons"] = reasons
+            current_state["triage_level"] = triage
+
+            turn1_res = generate_turn_1(category, corrected_word, current_state, language)
+            clarification = ct.get_typo_clarification(original_word, corrected_word, language)
+            turn1_res["reply"] = f"{clarification}\n\n{turn1_res['reply']}"
+            return turn1_res
+
         category = detect_category(message)
         current_state["category"] = category
         current_state["chief_complaint"] = message.strip()
