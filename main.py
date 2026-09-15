@@ -611,44 +611,75 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 
+NO_CACHE_HEADERS = {
+    "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",
+    "Pragma": "no-cache",
+    "Expires": "0",
+}
+
+
 @app.get("/")
 async def serve_root_gateway():
     """Primary Gateway: Starbucks Unified Login & Check-in Portal."""
-    return FileResponse("static/login.html")
+    return FileResponse("static/login.html", headers=NO_CACHE_HEADERS)
 
 
 @app.get("/login")
 async def serve_login_page():
-    return FileResponse("static/login.html")
+    return FileResponse("static/login.html", headers=NO_CACHE_HEADERS)
 
 
 @app.get("/doctor")
 async def serve_doctor_station():
     """Physician Clinical Station & Triage Monitor."""
-    return FileResponse("static/index.html")
+    return FileResponse("static/index.html", headers=NO_CACHE_HEADERS)
 
 
 @app.get("/portal")
 async def serve_portal_alias():
-    return FileResponse("static/index.html")
+    return FileResponse("static/index.html", headers=NO_CACHE_HEADERS)
 
 
 @app.get("/intake")
 async def serve_intake_page(request: Request):
     """
     Patient Kiosk Clinical Intake.
-    Guarantees Login-First: Unauthenticated walk-in visits are immediately
-    redirected to the unified login gateway.
+    Directly accessible for self-service walk-in patients and physicians.
+    If no active session exists, an anonymous walk-in guest session is automatically
+    initialized and set as a cookie so the kiosk immediately works without a login wall.
     """
     token = request.cookies.get("session_token")
-    if not token or not database.get_session(token):
-        return RedirectResponse(url="/login", status_code=303)
-    return FileResponse("static/intake.html")
+    user = database.get_session(token) if token else None
+
+    resp = FileResponse("static/intake.html", headers=NO_CACHE_HEADERS)
+
+    if not user:
+        guest_token = auth.generate_token()
+        guest_patient_id = auth.generate_patient_id()
+        guest_abha = auth.generate_abha_id()
+        guest_username = f"walkin_{guest_patient_id}"
+
+        digest, salt = auth.hash_password("kiosk-guest")
+        database.create_user(
+            username=guest_username,
+            password_hash=digest,
+            salt=salt,
+            role="patient",
+            full_name="Walk-in Patient",
+            patient_id=guest_patient_id,
+            abha_id=guest_abha,
+            abha_address=auth.generate_abha_address("Walk-in Patient"),
+        )
+        created_user = database.get_user_by_username(guest_username)
+        database.create_session(guest_token, created_user["id"], "patient")
+        resp.set_cookie(key="session_token", value=guest_token, httponly=True, samesite="lax")
+
+    return resp
 
 
 @app.get("/admin")
 async def serve_admin_page():
-    return FileResponse("static/admin.html")
+    return FileResponse("static/admin.html", headers=NO_CACHE_HEADERS)
 
 
 if __name__ == "__main__":

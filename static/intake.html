@@ -3822,15 +3822,14 @@ async function checkAuthAndInit() {
 
   try {
     const res = await fetch('/auth/me');
-    if (!res.ok) {
-      window.location.replace('/login');
-      return;
+    let user = null;
+    if (res.ok) {
+      user = await res.json();
     }
-    const user = await res.json();
     
     // If opened by doctor or admin (e.g. via "Patient Kiosk" or "+ New Kiosk Walk-In Patient"),
     // initialize a fresh walk-in patient intake session and add a return link to the Doctor Station.
-    if (user.role === 'doctor' || user.role === 'admin') {
+    if (user && (user.role === 'doctor' || user.role === 'admin')) {
       patientName = 'Walk-in Patient';
       patientId = 'P' + Math.floor(1000 + Math.random() * 9000);
       abhaId = '14-' + Math.floor(1000 + Math.random() * 9000) + '-' + Math.floor(1000 + Math.random() * 9000) + '-' + Math.floor(1000 + Math.random() * 9000);
@@ -3854,7 +3853,7 @@ async function checkAuthAndInit() {
         backBtn.innerHTML = '<span>🩺 Doctor Station</span>';
         headerActions.insertBefore(backBtn, headerActions.firstChild);
       }
-    } else {
+    } else if (user && user.role === 'patient') {
       // Authenticated patient
       patientName = user.full_name || 'Walk-in Patient';
       abhaId = user.abha_id || '14-8291-0394-8192';
@@ -3866,12 +3865,25 @@ async function checkAuthAndInit() {
       if (telPat) telPat.textContent = `${patientName} · Patient`;
       const telAbha = document.getElementById('telemetryAbha');
       if (telAbha) telAbha.textContent = `ABHA: ${abhaId}`;
+    } else {
+      // Direct walk-in kiosk visitor without prior account
+      patientName = 'Walk-in Patient';
+      patientId = 'P' + Math.floor(1000 + Math.random() * 9000);
+      abhaId = '14-' + Math.floor(1000 + Math.random() * 9000) + '-' + Math.floor(1000 + Math.random() * 9000) + '-' + Math.floor(1000 + Math.random() * 9000);
+
+      const abhaBadge = document.getElementById('abhaBadge');
+      if (abhaBadge) abhaBadge.textContent = `Walk-in ABHA: ${abhaId}`;
+      const telPat = document.getElementById('telemetryPatient');
+      if (telPat) telPat.textContent = `${patientName} · Walk-In`;
+      const telAbha = document.getElementById('telemetryAbha');
+      if (telAbha) telAbha.textContent = `ABHA: ${abhaId}`;
     }
 
     renderInitialWelcomeCard();
     await loadPatientPriorRecords();
   } catch (err) {
-    window.location.replace('/login');
+    console.warn("Kiosk initialization error:", err);
+    renderInitialWelcomeCard();
   }
 }
 
