@@ -95,6 +95,9 @@ class AbhaVerifyRequest(BaseModel):
     abha_id: str
     otp: str = "123456"
     full_name: str = ""
+    age: Optional[int] = None
+    weight: Optional[float] = None
+    gender: Optional[str] = ""
 
 
 class RegisterPatientRequest(BaseModel):
@@ -102,6 +105,15 @@ class RegisterPatientRequest(BaseModel):
     password: str
     full_name: str = ""
     abha_id: str = ""
+    age: Optional[int] = None
+    weight: Optional[float] = None
+    gender: Optional[str] = ""
+
+
+class DemographicsUpdateRequest(BaseModel):
+    age: Optional[int] = None
+    weight: Optional[float] = None
+    gender: Optional[str] = ""
 
 
 class CreateStaffRequest(BaseModel):
@@ -143,6 +155,9 @@ class IntakeSubmission(BaseModel):
     agni: str = ""
     ahara_vihara: str = ""
     dashavidha_pariksha: str = ""
+    age: Optional[int] = None
+    weight: Optional[float] = None
+    gender: Optional[str] = ""
     socrates: dict = Field(default_factory=dict)
     ros: dict = Field(default_factory=dict)
     consent_info: dict = Field(default_factory=dict)
@@ -174,6 +189,9 @@ async def login(payload: LoginRequest, response: Response):
         "full_name": user["full_name"],
         "patient_id": user["patient_id"],
         "abha_id": user.get("abha_id", ""),
+        "age": user.get("age"),
+        "weight": user.get("weight"),
+        "gender": user.get("gender", ""),
     }
 
 
@@ -208,11 +226,23 @@ async def abha_verify(payload: AbhaVerifyRequest, response: Response):
             patient_id=patient_id,
             abha_id=formatted_abha,
             abha_address=abha_address,
+            age=payload.age,
+            weight=payload.weight,
+            gender=payload.gender or "",
         )
         user = database.get_user_by_username(formatted_abha)
     else:
         user = existing_user
         patient_id = user["patient_id"]
+        if payload.age or payload.weight or payload.gender:
+            database.update_user_demographics(
+                user_id=user["id"],
+                patient_id=patient_id,
+                age=payload.age,
+                weight=payload.weight,
+                gender=payload.gender or "",
+            )
+            user = database.get_user_by_username(formatted_abha)
 
     token = auth.generate_token()
     database.create_session(token, user["id"], "patient")
@@ -231,6 +261,9 @@ async def abha_verify(payload: AbhaVerifyRequest, response: Response):
         "full_name": user["full_name"],
         "patient_id": patient_id,
         "abha_id": formatted_abha,
+        "age": user.get("age"),
+        "weight": user.get("weight"),
+        "gender": user.get("gender", ""),
     }
 
 
@@ -257,6 +290,9 @@ async def register_patient(payload: RegisterPatientRequest, response: Response):
         patient_id=patient_id,
         abha_id=formatted_abha,
         abha_address=abha_address,
+        age=payload.age,
+        weight=payload.weight,
+        gender=payload.gender or "",
     )
     user = database.get_user_by_username(payload.username)
 
@@ -269,6 +305,9 @@ async def register_patient(payload: RegisterPatientRequest, response: Response):
         "full_name": user["full_name"],
         "patient_id": patient_id,
         "abha_id": formatted_abha,
+        "age": user.get("age"),
+        "weight": user.get("weight"),
+        "gender": user.get("gender", ""),
     }
 
 
@@ -284,6 +323,26 @@ async def logout(request: Request, response: Response):
 @app.get("/auth/me")
 async def read_current_user(user: dict = Depends(get_current_user)):
     return user
+
+
+@app.post("/api/patient/demographics")
+async def update_patient_demographics(payload: DemographicsUpdateRequest, user: dict = Depends(get_current_user)):
+    """Allows patient to enter or update age, weight, and gender during onboarding."""
+    patient_id = user.get("patient_id")
+    user_id = user.get("id")
+    database.update_user_demographics(
+        user_id=user_id,
+        patient_id=patient_id,
+        age=payload.age,
+        weight=payload.weight,
+        gender=payload.gender or "",
+    )
+    return {
+        "status": "success",
+        "age": payload.age,
+        "weight": payload.weight,
+        "gender": payload.gender or "",
+    }
 
 
 # ---------- DPDP Act 2023 Consent & Kiosk Session Termination ----------

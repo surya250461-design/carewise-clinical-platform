@@ -1742,6 +1742,9 @@ let patientId = 'P' + Math.floor(1000 + Math.random() * 9000);
 let patientName = 'Ramesh Kumar';
 let abhaId = '14-8291-0394-8192';
 let isAbhaVerified = true;
+let patientAge = null;
+let patientWeight = null;
+let patientGender = "Male";
 let activeUtterance = null;
 let currentSpeechRecognition = null;
 let uploadedDocuments = [];
@@ -3130,10 +3133,116 @@ function getWelcomeMessage(lang, name, abha) {
   return welcomes[lang] || welcomes['en'];
 }
 
+function buildDemographicsOnboardingHtml() {
+  const isMale = (patientGender || 'Male') === 'Male';
+  const isFemale = patientGender === 'Female';
+  const isOther = patientGender === 'Other';
+
+  if (patientAge && patientWeight) {
+    return `
+      <div class="inline-card" id="demographicsOnboardingCard" style="border:1px solid var(--primary-border); background:#F0FDFA; margin-top:10px; padding:10px 14px; border-radius:10px;">
+        <div style="color:var(--primary-dark); font-size:12.5px; font-weight:700; display:flex; align-items:center; justify-content:space-between;">
+          <span>👤 Vitals: <strong>${patientAge} yrs</strong> · <strong>${patientGender}</strong> · <strong>${patientWeight} kg</strong></span>
+          <button type="button" onclick="editKioskDemographics()" style="background:transparent; border:none; color:var(--primary); font-size:11.5px; font-weight:700; cursor:pointer; text-decoration:underline;">Change</button>
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="inline-card" id="demographicsOnboardingCard" style="border:1.5px solid var(--primary); background:linear-gradient(135deg, #F0FDFA, #FFFFFF); margin-top:12px; padding:16px; border-radius:14px; box-shadow:0 4px 14px rgba(13,148,136,0.12);">
+      <div style="font-weight:800; font-size:14px; margin-bottom:4px; color:var(--primary-dark); display:flex; align-items:center; justify-content:space-between;">
+        <span style="display:flex; align-items:center; gap:6px;">👤 <span>Patient Demographics &amp; Vitals Check-In</span></span>
+        <span style="font-size:10px; background:var(--primary); color:white; padding:2px 8px; border-radius:12px; font-weight:700;">First-Time Check-In</span>
+      </div>
+      <p style="font-size:12px; color:var(--muted); margin:0 0 12px;">
+        Please confirm your age, weight, and gender for AI dosage safety and clinical summary accuracy:
+      </p>
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:12px;">
+        <div>
+          <label style="font-size:10.5px; font-weight:700; color:var(--muted); display:block; margin-bottom:4px;">AGE (YEARS)</label>
+          <input type="number" id="kioskAgeInput" value="${patientAge || ''}" placeholder="e.g. 58" style="width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:8px; font-size:13px; font-weight:600; box-sizing:border-box;" min="1" max="120" />
+        </div>
+        <div>
+          <label style="font-size:10.5px; font-weight:700; color:var(--muted); display:block; margin-bottom:4px;">WEIGHT (KG)</label>
+          <input type="number" id="kioskWeightInput" value="${patientWeight || ''}" placeholder="e.g. 74" style="width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:8px; font-size:13px; font-weight:600; box-sizing:border-box;" min="10" max="300" step="0.5" />
+        </div>
+        <div>
+          <label style="font-size:10.5px; font-weight:700; color:var(--muted); display:block; margin-bottom:4px;">GENDER</label>
+          <select id="kioskGenderInput" style="width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:8px; font-size:13px; font-weight:600; box-sizing:border-box; background:white;">
+            <option value="Male" ${isMale ? 'selected' : ''}>Male</option>
+            <option value="Female" ${isFemale ? 'selected' : ''}>Female</option>
+            <option value="Other" ${isOther ? 'selected' : ''}>Other</option>
+          </select>
+        </div>
+      </div>
+      <button type="button" class="btn btn-primary" onclick="saveKioskDemographics()" style="width:100%; font-size:13px; font-weight:700; padding:10px; border-radius:8px; display:flex; align-items:center; justify-content:center; gap:6px;">
+        ✓ Save Vitals &amp; Start Clinical Consultation →
+      </button>
+    </div>
+  `;
+}
+
+async function saveKioskDemographics() {
+  const ageEl = document.getElementById('kioskAgeInput');
+  const wtEl = document.getElementById('kioskWeightInput');
+  const genEl = document.getElementById('kioskGenderInput');
+
+  if (ageEl && ageEl.value) patientAge = parseInt(ageEl.value);
+  if (wtEl && wtEl.value) patientWeight = parseFloat(wtEl.value);
+  if (genEl && genEl.value) patientGender = genEl.value;
+
+  localStorage.setItem('kiosk_patient_demographics', JSON.stringify({
+    age: patientAge,
+    weight: patientWeight,
+    gender: patientGender
+  }));
+
+  updateDemographicsTelemetry();
+
+  try {
+    await fetch('/api/patient/demographics', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ age: patientAge, weight: patientWeight, gender: patientGender })
+    });
+  } catch(e) {
+    console.warn("Could not save demographics to backend:", e);
+  }
+
+  const card = document.getElementById('demographicsOnboardingCard');
+  if (card) {
+    card.style.background = '#F0FDFA';
+    card.style.borderColor = 'var(--primary-border)';
+    card.innerHTML = `
+      <div style="color:var(--primary-dark); font-size:12.5px; font-weight:700; display:flex; align-items:center; justify-content:space-between;">
+        <span>✓ Vitals Recorded: <strong>${patientAge ? patientAge + ' yrs' : ''}</strong> · <strong>${patientGender}</strong> · <strong>${patientWeight ? patientWeight + ' kg' : ''}</strong></span>
+        <button type="button" onclick="editKioskDemographics()" style="background:transparent; border:none; color:var(--primary); font-size:11.5px; font-weight:700; cursor:pointer; text-decoration:underline;">Change</button>
+      </div>
+    `;
+  }
+}
+
+function editKioskDemographics() {
+  const card = document.getElementById('demographicsOnboardingCard');
+  if (card) {
+    card.outerHTML = buildDemographicsOnboardingHtml();
+  }
+}
+
+function updateDemographicsTelemetry() {
+  const telPat = document.getElementById('telemetryPatient');
+  if (telPat) {
+    const demoPart = [patientAge ? `${patientAge}y` : '', patientGender || '', patientWeight ? `${patientWeight}kg` : ''].filter(Boolean).join(' · ');
+    telPat.textContent = demoPart ? `${patientName} (${demoPart})` : `${patientName} · Patient`;
+  }
+}
+
 function renderInitialWelcomeCard() {
   const welcomeText = getWelcomeMessage(currentLanguage, patientName, abhaId);
   const initialChips = getInitialChips(currentLanguage);
-  appendDoctorMessage(welcomeText, initialChips);
+  const onboardingHtml = buildDemographicsOnboardingHtml();
+  appendDoctorMessage(welcomeText, initialChips, onboardingHtml);
 }
 
 function buildMilestoneCompletionHtml() {
@@ -3259,7 +3368,10 @@ async function submitCompleteKioskCase() {
     ros: {},
     consent_info: { dpdp_consented: true, scope: "opd_consultation_abdm", audio_played: true },
     abha_id: abhaId,
-    language: currentLanguage
+    language: currentLanguage,
+    age: patientAge,
+    weight: patientWeight,
+    gender: patientGender
   };
 
   showTypingIndicator();
@@ -3340,6 +3452,7 @@ function printTokenPass() {
 
 async function resetKioskForNextPatient() {
   try {
+    localStorage.removeItem('kiosk_patient_demographics');
     await fetch('/api/patient/terminate-session', { method: 'POST' });
   } catch(e){}
   window.location.href = '/login';
@@ -3878,6 +3991,17 @@ async function checkAuthAndInit() {
       const telAbha = document.getElementById('telemetryAbha');
       if (telAbha) telAbha.textContent = `ABHA: ${abhaId}`;
     }
+
+    // Load demographics from user profile or kiosk localStorage
+    let storedDemo = null;
+    try {
+      storedDemo = JSON.parse(localStorage.getItem('kiosk_patient_demographics') || 'null');
+    } catch(e) {}
+
+    patientAge = (user && user.age != null) ? user.age : (storedDemo && storedDemo.age != null ? storedDemo.age : null);
+    patientWeight = (user && user.weight != null) ? user.weight : (storedDemo && storedDemo.weight != null ? storedDemo.weight : null);
+    patientGender = (user && user.gender) || (storedDemo && storedDemo.gender) || 'Male';
+    updateDemographicsTelemetry();
 
     renderInitialWelcomeCard();
     await loadPatientPriorRecords();

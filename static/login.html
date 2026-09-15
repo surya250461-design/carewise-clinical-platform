@@ -694,6 +694,32 @@
         </div>
       </div>
 
+      <!-- Demographic Vitals: Age, Weight, Gender -->
+      <div style="display:grid; grid-template-columns:1fr 1fr 1.2fr; gap:10px; margin-bottom:14px;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="input-label" for="patientAge">Age (Years)</label>
+          <div class="input-wrapper">
+            <input type="number" id="patientAge" class="form-input" placeholder="e.g. 58" min="1" max="120" />
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="input-label" for="patientWeight">Weight (kg)</label>
+          <div class="input-wrapper">
+            <input type="number" id="patientWeight" class="form-input" placeholder="e.g. 74" min="10" max="300" step="0.5" />
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="input-label" for="patientGender">Gender</label>
+          <div class="input-wrapper">
+            <select id="patientGender" class="form-input" style="padding:10px 12px; cursor:pointer;">
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
       <div class="form-group">
         <label class="input-label" for="abhaOtpInput" data-i18n="lblAbhaOtp">Aadhaar / Mobile OTP Verification Code</label>
         <div class="input-wrapper" style="gap:8px;">
@@ -722,10 +748,10 @@
           <span style="font-size:10px; color:var(--accent); font-weight:800;">ABDM Validated</span>
         </div>
         <div class="demo-chips">
-          <button type="button" class="demo-chip" onclick="fillPatientDemo('91-4523-8819-2041', 'Ramesh Chandra')">
+          <button type="button" class="demo-chip" onclick="fillPatientDemo('91-4523-8819-2041', 'Ramesh Chandra', 58, 74, 'Male')">
             🫀 Ramesh (Cardiac Walk-in)
           </button>
-          <button type="button" class="demo-chip" onclick="fillPatientDemo('14-8921-3310-7762', 'Sunita Devi')">
+          <button type="button" class="demo-chip" onclick="fillPatientDemo('14-8921-3310-7762', 'Sunita Devi', 42, 62, 'Female')">
             🤧 Sunita (Cold &amp; Cough)
           </button>
         </div>
@@ -1157,9 +1183,21 @@ function fillDoctorDemo(u, p) {
   hideError();
 }
 
-function fillPatientDemo(abha, name) {
+function fillPatientDemo(abha, name, age, weight, gender) {
   document.getElementById('abhaIdInput').value = abha;
   document.getElementById('patientFullName').value = name;
+  if (age !== undefined && age !== null) {
+    const ageEl = document.getElementById('patientAge');
+    if (ageEl) ageEl.value = age;
+  }
+  if (weight !== undefined && weight !== null) {
+    const wtEl = document.getElementById('patientWeight');
+    if (wtEl) wtEl.value = weight;
+  }
+  if (gender) {
+    const genEl = document.getElementById('patientGender');
+    if (genEl) genEl.value = gender;
+  }
   document.getElementById('abhaOtpInput').value = '123456';
   hideError();
 }
@@ -1226,6 +1264,9 @@ async function handleDoctorLogin() {
 async function handlePatientAbhaLogin() {
   const abha = document.getElementById('abhaIdInput').value.trim();
   const name = document.getElementById('patientFullName').value.trim();
+  const age = parseInt(document.getElementById('patientAge')?.value) || null;
+  const weight = parseFloat(document.getElementById('patientWeight')?.value) || null;
+  const gender = document.getElementById('patientGender')?.value || null;
   const otp = document.getElementById('abhaOtpInput').value.trim() || '123456';
   const btn = document.getElementById('btnPatientSubmit');
   const btnText = document.getElementById('btnPatientText');
@@ -1236,6 +1277,10 @@ async function handlePatientAbhaLogin() {
     return;
   }
 
+  if (age || weight || gender) {
+    localStorage.setItem('kiosk_patient_demographics', JSON.stringify({ age, weight, gender }));
+  }
+
   btn.disabled = true;
   btnText.innerHTML = `<span class="spinner-dot"></span> Verifying with ABDM Gateway…`;
 
@@ -1243,7 +1288,14 @@ async function handlePatientAbhaLogin() {
     const res = await fetch('/auth/abha-verify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ abha_id: abha, full_name: name, otp: otp })
+      body: JSON.stringify({
+        abha_id: abha,
+        full_name: name,
+        otp: otp,
+        age: age,
+        weight: weight,
+        gender: gender,
+      })
     });
     const data = await res.json();
     if (res.ok) {

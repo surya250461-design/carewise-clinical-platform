@@ -97,6 +97,9 @@ def init_db():
             patient_id TEXT,
             abha_id TEXT DEFAULT '',
             abha_address TEXT DEFAULT '',
+            age INTEGER DEFAULT NULL,
+            weight REAL DEFAULT NULL,
+            gender TEXT DEFAULT '',
             created_at TEXT
         )
     """)
@@ -158,6 +161,9 @@ def init_db():
         ("intake", "audio_consent_listened", "INTEGER DEFAULT 0"),
         ("intake", "abha_id", "TEXT DEFAULT ''"),
         ("intake", "language", "TEXT DEFAULT 'en'"),
+        ("intake", "age", "INTEGER DEFAULT NULL"),
+        ("intake", "weight", "REAL DEFAULT NULL"),
+        ("intake", "gender", "TEXT DEFAULT ''"),
         ("summaries", "patient_lang_summary", "TEXT DEFAULT ''"),
         ("summaries", "doctor_notes", "TEXT DEFAULT ''"),
         ("summaries", "approved_by", "TEXT DEFAULT ''"),
@@ -166,6 +172,9 @@ def init_db():
         ("summaries", "his_push_status", "TEXT DEFAULT 'pending'"),
         ("users", "abha_id", "TEXT DEFAULT ''"),
         ("users", "abha_address", "TEXT DEFAULT ''"),
+        ("users", "age", "INTEGER DEFAULT NULL"),
+        ("users", "weight", "REAL DEFAULT NULL"),
+        ("users", "gender", "TEXT DEFAULT ''"),
     ]
 
     for table, col, col_type in migrations:
@@ -545,7 +554,7 @@ def get_patient_full_history(patient_id: str, abha_id: str = "") -> dict:
 INTAKE_FIELDS = [
     "chief_complaint", "present_illness", "past_history", "medications",
     "allergies", "family_history", "lifestyle", "prakriti", "vikriti",
-    "agni", "ahara_vihara", "dashavidha_pariksha",
+    "agni", "ahara_vihara", "dashavidha_pariksha", "age", "weight", "gender",
 ]
 
 
@@ -563,7 +572,7 @@ def save_intake(
 ):
     """
     Saves self-reported intake, SOCRATES history, AYUSH exam, and DPDP consent.
-    Automatically updates the hospital triage queue.
+    Automatically updates the hospital triage queue and user demographics.
     """
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
@@ -573,11 +582,28 @@ def save_intake(
     ros_json = json.dumps(ros or {})
     reasons_json = json.dumps(red_flag_reasons or [])
 
-    # Fetch patient's full name from users if registered
-    cursor.execute("SELECT full_name, abha_id FROM users WHERE patient_id = ?", (patient_id,))
+    # Fetch patient's full name and existing demographics from users if registered
+    cursor.execute("SELECT full_name, abha_id, age, weight, gender FROM users WHERE patient_id = ?", (patient_id,))
     user_row = cursor.fetchone()
     patient_name = user_row[0] if user_row else patient_id
     linked_abha = abha_id or (user_row[1] if user_row else "")
+    if user_row:
+        if not fields.get("age") and user_row[2] is not None:
+            fields["age"] = user_row[2]
+        if not fields.get("weight") and user_row[3] is not None:
+            fields["weight"] = user_row[3]
+        if not fields.get("gender") and user_row[4]:
+            fields["gender"] = user_row[4]
+
+    # If demographics provided in intake, update users table for persistence
+    if fields.get("age") or fields.get("weight") or fields.get("gender"):
+        cursor.execute("""
+            UPDATE users
+            SET age = COALESCE(?, age),
+                weight = COALESCE(?, weight),
+                gender = COALESCE(NULLIF(?, ''), gender)
+            WHERE patient_id = ?
+        """, (fields.get("age"), fields.get("weight"), fields.get("gender"), patient_id))
 
     values = [fields.get(f, "") for f in INTAKE_FIELDS]
     now_iso = datetime.now().isoformat()
@@ -959,6 +985,9 @@ def seed_patient_history():
             "agni": "Manda Agni",
             "ahara_vihara": "Regular meal timings, low physical exercise",
             "dashavidha_pariksha": "Madhyama Bala, Vaya: Madhyama",
+            "age": 58,
+            "weight": 76.5,
+            "gender": "Male",
         }
         cursor.execute(f"""
             INSERT INTO intake (
@@ -1028,6 +1057,9 @@ def seed_patient_history():
             "agni": "Vishama Agni",
             "ahara_vihara": "Low-sodium diet",
             "dashavidha_pariksha": "Madhyama Bala",
+            "age": 58,
+            "weight": 76.5,
+            "gender": "Male",
         }
         cursor.execute(f"""
             INSERT INTO intake (
@@ -1098,6 +1130,9 @@ def seed_patient_history():
             "agni": "Manda Agni",
             "ahara_vihara": "Warm fluids and steam inhalation",
             "dashavidha_pariksha": "Madhyama Bala",
+            "age": 58,
+            "weight": 76.5,
+            "gender": "Male",
         }
         cursor.execute(f"""
             INSERT INTO intake (
@@ -1159,15 +1194,54 @@ def seed_patient_history():
     conn.close()
 
 
-def create_user(username: str, password_hash: str, salt: str, role: str, full_name: str, patient_id: str = None, abha_id: str = "", abha_address: str = ""):
-    """Creates a user account with optional ABHA link."""
+def create_user(
+    username: str,
+    password_hash: str,
+    salt: str,
+    role: str,
+    full_name: str,
+    patient_id: str = None,
+    abha_id: str = "",
+    abha_address: str = "",
+    age: int = None,
+    weight: float = None,
+    gender: str = "",
+):
+    """Creates a user account with optional ABHA link and demographic vitals."""
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
-        INSERT INTO users (username, password_hash, salt, role, full_name, patient_id, abha_id, abha_address, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-    """, (username, password_hash, salt, role, full_name, patient_id, abha_id, abha_address))
+        INSERT INTO users (username, password_hash, salt, role, full_name, patient_id, abha_id, abha_address, age, weight, gender, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+    """, (username, password_hash, salt, role, full_name, patient_id, abha_id, abha_address, age, weight, gender))
     conn.commit()
+    conn.close()
+
+
+def update_user_demographics(user_id: int = None, patient_id: str = None, age: int = None, weight: float = None, gender: str = ""):
+    """Updates user demographic vitals (age, weight, gender)."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    updates = []
+    params = []
+    if age is not None:
+        updates.append("age = ?")
+        params.append(age)
+    if weight is not None:
+        updates.append("weight = ?")
+        params.append(weight)
+    if gender:
+        updates.append("gender = ?")
+        params.append(gender)
+
+    if updates:
+        if user_id:
+            params.append(user_id)
+            cursor.execute(f"UPDATE users SET {', '.join(updates)} WHERE id = ?", params)
+        elif patient_id:
+            params.append(patient_id)
+            cursor.execute(f"UPDATE users SET {', '.join(updates)} WHERE patient_id = ?", params)
+        conn.commit()
     conn.close()
 
 
@@ -1175,7 +1249,7 @@ def get_user_by_username(username: str):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT id, username, password_hash, salt, role, full_name, patient_id, abha_id, abha_address
+        SELECT id, username, password_hash, salt, role, full_name, patient_id, abha_id, abha_address, age, weight, gender
         FROM users WHERE username = ?
     """, (username,))
     row = cursor.fetchone()
@@ -1186,6 +1260,7 @@ def get_user_by_username(username: str):
         "id": row[0], "username": row[1], "password_hash": row[2], "salt": row[3],
         "role": row[4], "full_name": row[5], "patient_id": row[6],
         "abha_id": row[7] or "", "abha_address": row[8] or "",
+        "age": row[9], "weight": row[10], "gender": row[11] or "",
     }
 
 
@@ -1193,7 +1268,7 @@ def get_user_by_patient_id(patient_id: str):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT id, username, role, full_name, patient_id, abha_id, abha_address
+        SELECT id, username, role, full_name, patient_id, abha_id, abha_address, age, weight, gender
         FROM users WHERE patient_id = ?
     """, (patient_id,))
     row = cursor.fetchone()
@@ -1203,6 +1278,7 @@ def get_user_by_patient_id(patient_id: str):
     return {
         "id": row[0], "username": row[1], "role": row[2], "full_name": row[3],
         "patient_id": row[4], "abha_id": row[5] or "", "abha_address": row[6] or "",
+        "age": row[7], "weight": row[8], "gender": row[9] or "",
     }
 
 
@@ -1210,11 +1286,14 @@ def list_users():
     """For the admin panel — never includes password hashes."""
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute("SELECT username, role, full_name, patient_id, abha_id, created_at FROM users ORDER BY created_at DESC")
+    cursor.execute("SELECT username, role, full_name, patient_id, abha_id, created_at, age, weight, gender FROM users ORDER BY created_at DESC")
     rows = cursor.fetchall()
     conn.close()
     return [
-        {"username": r[0], "role": r[1], "full_name": r[2], "patient_id": r[3], "abha_id": r[4] or "", "created_at": r[5]}
+        {
+            "username": r[0], "role": r[1], "full_name": r[2], "patient_id": r[3],
+            "abha_id": r[4] or "", "created_at": r[5], "age": r[6], "weight": r[7], "gender": r[8] or ""
+        }
         for r in rows
     ]
 
@@ -1233,7 +1312,7 @@ def get_session(token: str):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT u.id, u.username, u.role, u.full_name, u.patient_id, u.abha_id
+        SELECT u.id, u.username, u.role, u.full_name, u.patient_id, u.abha_id, u.age, u.weight, u.gender
         FROM sessions s JOIN users u ON s.user_id = u.id
         WHERE s.token = ?
     """, (token,))
@@ -1244,6 +1323,7 @@ def get_session(token: str):
     return {
         "id": row[0], "username": row[1], "role": row[2],
         "full_name": row[3], "patient_id": row[4], "abha_id": row[5] or "",
+        "age": row[6], "weight": row[7], "gender": row[8] or "",
     }
 
 
