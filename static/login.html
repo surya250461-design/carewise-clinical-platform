@@ -1442,7 +1442,18 @@ function initParticleCanvas() {
 document.addEventListener('DOMContentLoaded', () => {
   initParticleCanvas();
   changeLanguage(currentLanguage);
-  selectRole('doctor');
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const roleParam = urlParams.get('role');
+  if (roleParam && ['doctor', 'patient', 'admin'].includes(roleParam.toLowerCase())) {
+    selectRole(roleParam.toLowerCase());
+  } else if (window.location.hash === '#patient') {
+    selectRole('patient');
+  } else if (window.location.hash === '#admin') {
+    selectRole('admin');
+  } else {
+    selectRole('doctor');
+  }
 });
 </script>
 </body>

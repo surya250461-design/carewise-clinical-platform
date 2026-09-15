@@ -688,6 +688,13 @@ async def serve_login_page():
     return FileResponse("static/login.html", headers=NO_CACHE_HEADERS)
 
 
+@app.get("/login/patient")
+@app.get("/patient-login")
+async def serve_patient_login_page():
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/login?role=patient")
+
+
 @app.get("/doctor")
 async def serve_doctor_station():
     """Physician Clinical Station & Triage Monitor."""
