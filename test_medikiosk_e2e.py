@@ -18,7 +18,7 @@ client = TestClient(main.app)
 
 def test_full_pipeline():
     print("========================================")
-    print("STARTING STARBUCKS END-TO-END VERIFICATION")
+    print("STARTING CAREWISE END-TO-END VERIFICATION")
     print("========================================")
 
     # 0. Test Admin Login and Stats

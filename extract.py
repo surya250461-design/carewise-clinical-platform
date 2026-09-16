@@ -102,7 +102,7 @@ def _extract_text_via_ocr(filepath: str) -> str:
 def call_llm(prompt: str) -> str:
     """
     Attempts Groq then Gemini. If neither key is configured or an API error occurs,
-    gracefully routes to the local clinical heuristic engine so Starbucks never halts.
+    gracefully routes to the local clinical heuristic engine so Carewise never halts.
     """
     if os.environ.get("GROQ_API_KEY") and groq_available:
         try:
@@ -325,7 +325,7 @@ def check_drug_interactions(medications: list) -> list:
 # 5. Entity Extraction Pipeline
 # =====================================================================
 
-EXTRACTION_PROMPT = """You are a clinical data extraction specialist for Starbucks.
+EXTRACTION_PROMPT = """You are a clinical data extraction specialist for Carewise.
 Read the patient case document below and extract structured medical entities accurately.
 
 Return ONLY valid JSON in exactly this shape, with no extra text or markdown formatting:
@@ -509,7 +509,7 @@ def generate_socrates_probe(chief_complaint: str, answers_so_far: dict = None, l
 # 7. Bilingual Summary Generator & Patient Briefing
 # =====================================================================
 
-PHYSICIAN_SUMMARY_TEMPLATE = """# PRE-CONSULTATION CLINICAL SUMMARY (Starbucks)
+PHYSICIAN_SUMMARY_TEMPLATE = """# PRE-CONSULTATION CLINICAL SUMMARY (Carewise)
 **Patient ID:** {patient_id} | **ABHA ID:** {abha_id} | **Triage Urgency:** {triage_level}
 **Patient Demographics:** Age: {age} | Gender: {gender} | Weight: {weight}
 

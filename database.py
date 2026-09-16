@@ -2,7 +2,7 @@
 database.py
 ------------
 Everything about saving and reading patient records lives here.
-We use SQLite with backward-compatible schema migrations for Starbucks.
+We use SQLite with backward-compatible schema migrations for Carewise.
 """
 
 import sqlite3

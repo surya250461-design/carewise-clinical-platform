@@ -1,7 +1,7 @@
 """
 consultation.py
 ---------------
-Interactive Doctor-Patient Consultation Engine for Starbucks.
+Interactive Doctor-Patient Consultation Engine for Carewise.
 Transforms step-by-step intake into an adaptive conversation:
 1. Validates medical input (filters inappropriate, gibberish, and off-topic messages).
 2. Generates dynamic, multi-turn doctor questions based on prior answers.

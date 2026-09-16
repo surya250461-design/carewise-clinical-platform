@@ -1,7 +1,7 @@
 """
 main.py
 -------
-Starbucks AI Clinical History Software Platform:
+Carewise AI Clinical History Software Platform:
 Main FastAPI traffic controller exposing:
 1. Patient Authentication (Password & ABHA ID / ABDM simulation).
 2. DPDP Act 2023 Consent Management & Kiosk Session Termination.
@@ -28,7 +28,7 @@ import red_flags
 import auth
 import consultation
 
-app = FastAPI(title="Starbucks AI Clinical History Software Platform")
+app = FastAPI(title="Carewise AI Clinical History Software Platform")
 
 app.add_middleware(
     CORSMiddleware,
@@ -199,7 +199,7 @@ async def login(payload: LoginRequest, response: Response):
 async def abha_verify(payload: AbhaVerifyRequest, response: Response):
     """
     Verifies ABHA ID (or generates a validated test ABHA ID) and signs in the patient
-    at Starbucks with zero friction for walk-ins.
+    at Carewise with zero friction for walk-ins.
     """
     raw_abha = payload.abha_id.strip()
     if not raw_abha:
@@ -679,7 +679,7 @@ NO_CACHE_HEADERS = {
 
 @app.get("/")
 async def serve_root_gateway():
-    """Primary Gateway: Starbucks Unified Login & Check-in Portal."""
+    """Primary Gateway: Carewise Unified Login & Check-in Portal."""
     return FileResponse("static/login.html", headers=NO_CACHE_HEADERS)
 
 
